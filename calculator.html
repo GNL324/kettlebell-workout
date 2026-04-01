@@ -288,24 +288,28 @@
 
             <!-- Custom Stakes -->
             <div class="stake-section">
-                <h3>💰 Custom Stakes (Edit Either)</h3>
+                <h3>💰 Custom Stakes (Auto-Scales Both)</h3>
                 <div class="stake-inputs">
                     <div class="input-group">
                         <label>Stake on Bet 1</label>
                         <input type="number" id="stake1" placeholder="Amount" value="10.00" step="0.01">
                     </div>
                     <div class="input-group">
-                        <label>Stake on Bet 2</label>
+                        <label>Stake on Bet 2 (Auto-scaled)</label>
                         <input type="number" id="stake2" placeholder="Amount" value="16.71" step="0.01">
                     </div>
                 </div>
                 <div class="quick-stakes">
                     <span style="color: #888; font-size: 13px; align-self: center;">Quick stakes:</span>
-                    <button class="quick-stake-btn" onclick="setStakes(5, 8.35)">$5 / $8.35</button>
-                    <button class="quick-stake-btn" onclick="setStakes(10, 16.71)">$10 / $16.71</button>
-                    <button class="quick-stake-btn" onclick="setStakes(20, 33.42)">$20 / $33.42</button>
-                    <button class="quick-stake-btn" onclick="setStakes(50, 83.55)">$50 / $83.55</button>
+                    <button class="quick-stake-btn" onclick="setStakes(5)">$5</button>
+                    <button class="quick-stake-btn" onclick="setStakes(10)">$10</button>
+                    <button class="quick-stake-btn" onclick="setStakes(20)">$20</button>
+                    <button class="quick-stake-btn" onclick="setStakes(50)">$50</button>
+                    <button class="quick-stake-btn" onclick="setStakes(100)">$100</button>
                 </div>
+                <p style="color: #888; font-size: 12px; margin-top: 10px;">
+                    💡 Edit Bet 1 stake → Bet 2 auto-scales for optimal arbitrage
+                </p>
             </div>
 
             <!-- Results -->
@@ -367,15 +371,37 @@
     </div>
 
     <script>
-        // Add event listeners to all inputs
-        document.querySelectorAll('input').forEach(input => {
-            input.addEventListener('input', calculate);
+        let lastEdited = 'stake1'; // Track which stake was last edited
+
+        // Add event listeners to odds inputs
+        document.getElementById('odds1').addEventListener('input', () => {
+            calculate(true); // Recalculate with scaling
+        });
+        
+        document.getElementById('odds2').addEventListener('input', () => {
+            calculate(true); // Recalculate with scaling
         });
 
-        function setStakes(s1, s2) {
-            document.getElementById('stake1').value = s1.toFixed(2);
-            document.getElementById('stake2').value = s2.toFixed(2);
-            calculate();
+        // Add event listeners to stake inputs
+        document.getElementById('stake1').addEventListener('input', () => {
+            lastEdited = 'stake1';
+            calculate(true); // Scale stake2
+        });
+        
+        document.getElementById('stake2').addEventListener('input', () => {
+            lastEdited = 'stake2';
+            calculate(false); // Don't scale, just calculate
+        });
+
+        // Add event listeners to other inputs (no scaling)
+        ['book1', 'outcome1', 'book2', 'outcome2'].forEach(id => {
+            document.getElementById(id).addEventListener('input', calculate);
+        });
+
+        function setStakes(baseStake) {
+            lastEdited = 'stake1';
+            document.getElementById('stake1').value = baseStake.toFixed(2);
+            calculate(true); // Auto-scale stake2
         }
 
         function americanToDecimal(odds) {
@@ -394,7 +420,7 @@
             }
         }
 
-        function calculate() {
+        function calculate(scaleStakes = false) {
             // Get odds
             let odds1Str = document.getElementById('odds1').value.replace('+', '');
             let odds2Str = document.getElementById('odds2').value.replace('+', '');
@@ -408,6 +434,20 @@
 
             if (isNaN(odds1) || isNaN(odds2)) {
                 return;
+            }
+
+            // Auto-scale stakes if editing stake1 or odds changed
+            if (scaleStakes && lastEdited === 'stake1') {
+                // Calculate optimal stake2 based on stake1
+                let decimal1 = americanToDecimal(odds1);
+                let decimal2 = americanToDecimal(odds2);
+                
+                // For equal payouts: stake1 * decimal1 = stake2 * decimal2
+                // Therefore: stake2 = stake1 * decimal1 / decimal2
+                stake2 = stake1 * decimal1 / decimal2;
+                
+                // Update stake2 input (without triggering event)
+                document.getElementById('stake2').value = stake2.toFixed(2);
             }
 
             // Calculate implied probabilities

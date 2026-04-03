@@ -51,11 +51,62 @@
             grid-template-columns: 1fr 1fr;
             gap: 20px;
             margin-bottom: 30px;
+            position: relative;
         }
 
         @media (max-width: 600px) {
             .bet-section {
                 grid-template-columns: 1fr;
+            }
+        }
+
+        .swap-btn {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #00d9ff, #00ff88);
+            border: 3px solid #1a1a2e;
+            color: #000;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 10;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .swap-btn:hover {
+            transform: translate(-50%, -50%) scale(1.1) rotate(180deg);
+            box-shadow: 0 0 20px rgba(0, 217, 255, 0.5);
+        }
+
+        .swap-btn:active {
+            transform: translate(-50%, -50%) scale(0.95) rotate(180deg);
+        }
+
+        @media (max-width: 600px) {
+            .swap-btn {
+                position: relative;
+                top: auto;
+                left: auto;
+                transform: none;
+                margin: 10px auto;
+                width: 60px;
+                height: 60px;
+            }
+
+            .swap-btn:hover {
+                transform: scale(1.1) rotate(180deg);
+            }
+
+            .swap-btn:active {
+                transform: scale(0.95) rotate(180deg);
             }
         }
 
@@ -265,6 +316,8 @@
         <div class="calculator">
             <!-- Bet 1 -->
             <div class="bet-section">
+                <button class="swap-btn" onclick="swapBets()" title="Swap Bet 1 and Bet 2">⇄</button>
+                
                 <div class="bet-card">
                     <h3>Bet 1 (Side A)</h3>
                     <div class="input-group">
@@ -545,6 +598,34 @@
             lastEdited = 'stake1';
             document.getElementById('stake1').value = baseStake.toFixed(2);
             calculate(true); // Auto-scale stake2
+        }
+
+        // Swap Bet 1 and Bet 2
+        function swapBets() {
+            // Get current values
+            const odds1 = document.getElementById('odds1').value;
+            const odds2 = document.getElementById('odds2').value;
+            const book1 = document.getElementById('book1').value;
+            const book2 = document.getElementById('book2').value;
+            const outcome1 = document.getElementById('outcome1').value;
+            const outcome2 = document.getElementById('outcome2').value;
+            const stake1 = document.getElementById('stake1').value;
+            const stake2 = document.getElementById('stake2').value;
+
+            // Swap values
+            document.getElementById('odds1').value = odds2;
+            document.getElementById('odds2').value = odds1;
+            document.getElementById('book1').value = book2;
+            document.getElementById('book2').value = book1;
+            document.getElementById('outcome1').value = outcome2;
+            document.getElementById('outcome2').value = outcome1;
+            document.getElementById('stake1').value = stake2;
+            document.getElementById('stake2').value = stake1;
+
+            // Recalculate
+            lastEdited = 'stake1';
+            calculate(true);
+            calculateMaxBet();
         }
 
         function americanToDecimal(odds) {

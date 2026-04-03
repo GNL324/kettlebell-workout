@@ -248,7 +248,19 @@
 <body>
     <div class="container">
         <h1>🧮 GNL Calculator</h1>
-        <p class="subtitle">Custom stakes for each side • Real-time calculations</p>
+        <p class="subtitle">Custom stakes • Real-time calculations • Bankroll-aware</p>
+
+        <!-- Bankroll Alert -->
+        <div id="bankrollAlert" style="display: none; background: rgba(255, 165, 2, 0.2); border: 1px solid rgba(255, 165, 2, 0.5); border-radius: 12px; padding: 15px; margin-bottom: 20px; text-align: center;">
+            <span id="bankrollAlertText" style="color: #ffa502; font-size: 14px;"></span>
+        </div>
+
+        <!-- Max Bet Display -->
+        <div id="maxBetDisplay" style="display: none; background: rgba(0, 217, 255, 0.1); border: 1px solid rgba(0, 217, 255, 0.3); border-radius: 12px; padding: 15px; margin-bottom: 20px; text-align: center;">
+            <div style="color: #00d9ff; font-size: 13px; margin-bottom: 5px;">Maximum Bet Based on Available Balances</div>
+            <div style="font-size: 24px; font-weight: bold; color: #00ff88;" id="maxBetAmount">$0.00</div>
+            <div style="color: #888; font-size: 12px; margin-top: 5px;" id="maxBetDetails"></div>
+        </div>
 
         <div class="calculator">
             <!-- Bet 1 -->
@@ -399,13 +411,110 @@
     <script>
         let lastEdited = 'stake1'; // Track which stake was last edited
 
+        // Bankroll balances - try to load from localStorage (from tracker), otherwise use defaults
+        function getBankrollBalances() {
+            // Try to get balances from tracker's localStorage
+            const stored = localStorage.getItem('gnl_sportsbooks');
+            if (stored) {
+                try {
+                    const parsed = JSON.parse(stored);
+                    const balances = {};
+                    for (let sb in parsed) {
+                        balances[sb] = parsed[sb].balance || 0;
+                    }
+                    return balances;
+                } catch (e) {
+                    console.log('Could not parse stored bankroll data');
+                }
+            }
+            // Default balances (last known from tracker)
+            return {
+                'DraftKings': 1.06,
+                'FanDuel': 0.33,
+                'BetMGM': 35.09,
+                'theScore BET': 40.08,
+                'BetRivers': 0.00,
+                'Fanatics': 10.00,
+                'Kalshi': 0.00
+            };
+        }
+
+        const bankrollBalances = getBankrollBalances();
+
+        // Calculate maximum bet based on selected sportsbooks
+        function calculateMaxBet() {
+            const book1 = document.getElementById('book1').value;
+            const book2 = document.getElementById('book2').value;
+            
+            const maxBetDisplay = document.getElementById('maxBetDisplay');
+            const bankrollAlert = document.getElementById('bankrollAlert');
+            
+            if (!book1 || !book2) {
+                maxBetDisplay.style.display = 'none';
+                bankrollAlert.style.display = 'none';
+                return;
+            }
+
+            const balance1 = bankrollBalances[book1] || 0;
+            const balance2 = bankrollBalances[book2] || 0;
+
+            // For arbitrage, we need to find the max stake1 where:
+            // stake1 <= balance1 AND stake2 <= balance2
+            // stake2 = stake1 * decimal1 / decimal2
+            
+            const odds1 = parseFloat(document.getElementById('odds1').value.replace('+', '')) || 0;
+            const odds2 = parseFloat(document.getElementById('odds2').value.replace('+', '')) || 0;
+
+            if (odds1 === 0 || odds2 === 0) {
+                maxBetDisplay.style.display = 'none';
+                return;
+            }
+
+            const decimal1 = americanToDecimal(odds1);
+            const decimal2 = americanToDecimal(odds2);
+
+            // Max stake1 based on balance1
+            const maxStake1ByBalance1 = balance1;
+            
+            // Max stake1 based on balance2: stake2 = stake1 * decimal1 / decimal2 <= balance2
+            // Therefore: stake1 <= balance2 * decimal2 / decimal1
+            const maxStake1ByBalance2 = balance2 * decimal2 / decimal1;
+
+            // Take the smaller of the two
+            const maxStake1 = Math.min(maxStake1ByBalance1, maxStake1ByBalance2);
+            const maxStake2 = maxStake1 * decimal1 / decimal2;
+
+            if (maxStake1 > 0 && maxStake2 > 0) {
+                document.getElementById('maxBetAmount').textContent = '$' + maxStake1.toFixed(2) + ' + $' + maxStake2.toFixed(2);
+                document.getElementById('maxBetDetails').textContent = `${book1}: $${maxStake1.toFixed(2)} (avail: $${balance1.toFixed(2)}) • ${book2}: $${maxStake2.toFixed(2)} (avail: $${balance2.toFixed(2)})`;
+                maxBetDisplay.style.display = 'block';
+
+                // Check if either balance is very low
+                if (balance1 < 5 || balance2 < 5) {
+                    const lowBooks = [];
+                    if (balance1 < 5) lowBooks.push(`${book1} ($${balance1.toFixed(2)})`);
+                    if (balance2 < 5) lowBooks.push(`${book2} ($${balance2.toFixed(2)})`);
+                    document.getElementById('bankrollAlertText').textContent = `⚠️ Low balance warning: ${lowBooks.join(', ')}. Consider adding funds.`;
+                    bankrollAlert.style.display = 'block';
+                } else {
+                    bankrollAlert.style.display = 'none';
+                }
+            } else {
+                maxBetDisplay.style.display = 'none';
+                bankrollAlert.style.display = 'block';
+                document.getElementById('bankrollAlertText').textContent = `❌ Insufficient funds in ${balance1 < balance2 ? book1 : book2}. Need to add funds before placing this arb.`;
+            }
+        }
+
         // Add event listeners to odds inputs
         document.getElementById('odds1').addEventListener('input', () => {
             calculate(true); // Recalculate with scaling
+            calculateMaxBet(); // Update max bet
         });
         
         document.getElementById('odds2').addEventListener('input', () => {
             calculate(true); // Recalculate with scaling
+            calculateMaxBet(); // Update max bet
         });
 
         // Add event listeners to stake inputs
@@ -419,8 +528,16 @@
             calculate(false); // Don't scale, just calculate
         });
 
+        // Add event listeners to bookmaker dropdowns (trigger max bet calculation)
+        ['book1', 'book2'].forEach(id => {
+            document.getElementById(id).addEventListener('change', () => {
+                calculate();
+                calculateMaxBet();
+            });
+        });
+
         // Add event listeners to other inputs (no scaling)
-        ['odds1', 'odds2', 'book1', 'outcome1', 'book2', 'outcome2'].forEach(id => {
+        ['odds1', 'odds2', 'outcome1', 'outcome2'].forEach(id => {
             document.getElementById(id).addEventListener('change', calculate);
         });
 

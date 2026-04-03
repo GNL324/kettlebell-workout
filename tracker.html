@@ -357,8 +357,6 @@
                     <option value="BetRivers">BetRivers</option>
                     <option value="Fanatics">Fanatics</option>
                     <option value="Kalshi">Kalshi</option>
-                    <option value="BetOnline.ag">BetOnline.ag</option>
-                    <option value="MyBookie.ag">MyBookie.ag</option>
                 </select>
             </div>
             <div class="form-group">
@@ -391,8 +389,6 @@
                     <option value="BetRivers">BetRivers</option>
                     <option value="Fanatics">Fanatics</option>
                     <option value="Kalshi">Kalshi</option>
-                    <option value="BetOnline.ag">BetOnline.ag</option>
-                    <option value="MyBookie.ag">MyBookie.ag</option>
                 </select>
             </div>
             <div class="form-group">
@@ -434,8 +430,6 @@
                     <option value="BetRivers">BetRivers</option>
                     <option value="Fanatics">Fanatics</option>
                     <option value="Kalshi">Kalshi</option>
-                    <option value="BetOnline.ag">BetOnline.ag</option>
-                    <option value="MyBookie.ag">MyBookie.ag</option>
                 </select>
             </div>
             <div class="form-group">
@@ -449,8 +443,6 @@
                     <option value="BetRivers">BetRivers</option>
                     <option value="Fanatics">Fanatics</option>
                     <option value="Kalshi">Kalshi</option>
-                    <option value="BetOnline.ag">BetOnline.ag</option>
-                    <option value="MyBookie.ag">MyBookie.ag</option>
                 </select>
             </div>
             <div class="form-group">
@@ -484,6 +476,17 @@
             'Kalshi': { balance: 0.00, pending: 0 }
         };
 
+        // Available sportsbooks (for dropdowns)
+        const availableSportsbooks = [
+            'DraftKings',
+            'FanDuel',
+            'BetMGM',
+            'theScore BET',
+            'BetRivers',
+            'Fanatics',
+            'Kalshi'
+        ];
+
         // Initialize transactions
         let transactions = JSON.parse(localStorage.getItem('gnl_transactions')) || [
             { type: 'deposit', sportsbook: 'DraftKings', amount: 10.00, date: '2026-03-31', notes: 'Initial deposit' },
@@ -495,6 +498,11 @@
         // Save transactions to localStorage
         function saveTransactions() {
             localStorage.setItem('gnl_transactions', JSON.stringify(transactions));
+        }
+
+        // Save sportsbooks to localStorage (for calculator to read)
+        function saveSportsbooks() {
+            localStorage.setItem('gnl_sportsbooks', JSON.stringify(sportsbooks));
         }
 
         // Format currency
@@ -541,19 +549,21 @@
             const grid = document.getElementById('sportsbooksGrid');
             grid.innerHTML = '';
 
-            for (let sb in sportsbooks) {
-                const card = document.createElement('div');
-                card.className = 'sportsbook-card';
-                card.innerHTML = `
-                    <div class="name">${sb}</div>
-                    <div class="balance">${formatCurrency(sportsbooks[sb].balance)}</div>
-                    <div class="details">
-                        <span>Available</span>
-                        ${sportsbooks[sb].pending > 0 ? `<span style="color: #ffa502;">+ ${formatCurrency(sportsbooks[sb].pending)} in transit</span>` : ''}
-                    </div>
-                `;
-                grid.appendChild(card);
-            }
+            availableSportsbooks.forEach(sb => {
+                if (sportsbooks[sb]) {
+                    const card = document.createElement('div');
+                    card.className = 'sportsbook-card';
+                    card.innerHTML = `
+                        <div class="name">${sb}</div>
+                        <div class="balance">${formatCurrency(sportsbooks[sb].balance)}</div>
+                        <div class="details">
+                            <span>Available</span>
+                            ${sportsbooks[sb].pending > 0 ? `<span style="color: #ffa502;">+ ${formatCurrency(sportsbooks[sb].pending)} in transit</span>` : ''}
+                        </div>
+                    `;
+                    grid.appendChild(card);
+                }
+            });
         }
 
         // Render transactions
@@ -617,6 +627,7 @@
             });
 
             saveTransactions();
+            saveSportsbooks();
             updateDashboard();
             renderSportsbooks();
             renderTransactions();

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Arbitrage Calculator - Custom Stakes</title>
+    <title>GNL Calculator - Custom Stakes</title>
     <style>
         * {
             margin: 0;
@@ -247,7 +247,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>🧮 Arbitrage Calculator</h1>
+        <h1>🧮 GNL Calculator</h1>
         <p class="subtitle">Custom stakes for each side • Real-time calculations</p>
 
         <div class="calculator">
@@ -261,11 +261,24 @@
                     </div>
                     <div class="input-group">
                         <label>Bookmaker</label>
-                        <input type="text" id="book1" placeholder="e.g., DraftKings" value="DraftKings">
+                        <select id="book1" style="width: 100%; padding: 12px; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; background: rgba(0, 0, 0, 0.3); color: #fff; font-size: 16px;">
+                            <option value="">Select Bookmaker</option>
+                            <option value="DraftKings" selected>DraftKings</option>
+                            <option value="FanDuel">FanDuel</option>
+                            <option value="BetMGM">BetMGM</option>
+                            <option value="theScore BET">theScore BET</option>
+                            <option value="BetRivers">BetRivers</option>
+                        </select>
                     </div>
                     <div class="input-group">
                         <label>Bet/Outcome</label>
-                        <input type="text" id="outcome1" placeholder="e.g., Lakers +5.5" value="Over 8+">
+                        <select id="outcome1" style="width: 100%; padding: 12px; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; background: rgba(0, 0, 0, 0.3); color: #fff; font-size: 16px;">
+                            <option value="">Select Outcome</option>
+                            <option value="Over" selected>Over</option>
+                            <option value="Under">Under</option>
+                            <option value="Yes">Yes</option>
+                            <option value="No">No</option>
+                        </select>
                     </div>
                 </div>
 
@@ -277,11 +290,24 @@
                     </div>
                     <div class="input-group">
                         <label>Bookmaker</label>
-                        <input type="text" id="book2" placeholder="e.g., FanDuel" value="BetMGM">
+                        <select id="book2" style="width: 100%; padding: 12px; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; background: rgba(0, 0, 0, 0.3); color: #fff; font-size: 16px;">
+                            <option value="">Select Bookmaker</option>
+                            <option value="DraftKings">DraftKings</option>
+                            <option value="FanDuel">FanDuel</option>
+                            <option value="BetMGM" selected>BetMGM</option>
+                            <option value="theScore BET">theScore BET</option>
+                            <option value="BetRivers">BetRivers</option>
+                        </select>
                     </div>
                     <div class="input-group">
                         <label>Bet/Outcome</label>
-                        <input type="text" id="outcome2" placeholder="e.g., Celtics -5.5" value="Under 7.5">
+                        <select id="outcome2" style="width: 100%; padding: 12px; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; background: rgba(0, 0, 0, 0.3); color: #fff; font-size: 16px;">
+                            <option value="">Select Outcome</option>
+                            <option value="Over">Over</option>
+                            <option value="Under" selected>Under</option>
+                            <option value="Yes">Yes</option>
+                            <option value="No">No</option>
+                        </select>
                     </div>
                 </div>
             </div>
@@ -394,8 +420,8 @@
         });
 
         // Add event listeners to other inputs (no scaling)
-        ['book1', 'outcome1', 'book2', 'outcome2'].forEach(id => {
-            document.getElementById(id).addEventListener('input', calculate);
+        ['odds1', 'odds2', 'book1', 'outcome1', 'book2', 'outcome2'].forEach(id => {
+            document.getElementById(id).addEventListener('change', calculate);
         });
 
         function setStakes(baseStake) {

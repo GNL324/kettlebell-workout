@@ -630,7 +630,7 @@
             calculate(true); // Auto-scale stake2
         }
 
-        // Round stakes to whole numbers
+        // Round stakes to whole numbers (no cents)
         function roundStakes() {
             const stake1 = parseFloat(document.getElementById('stake1').value) || 0;
             const stake2 = parseFloat(document.getElementById('stake2').value) || 0;
@@ -639,32 +639,17 @@
                 return; // Nothing to round
             }
 
-            // Round stake1 to nearest whole number
+            // Round both stakes to nearest whole dollar
             const roundedStake1 = Math.round(stake1);
-            
-            // Recalculate stake2 based on rounded stake1
-            const odds1Str = document.getElementById('odds1').value.replace('+', '');
-            const odds2Str = document.getElementById('odds2').value.replace('+', '');
-            const odds1 = parseFloat(odds1Str);
-            const odds2 = parseFloat(odds2Str);
+            const roundedStake2 = Math.round(stake2);
 
-            if (isNaN(odds1) || isNaN(odds2)) {
-                return;
-            }
-
-            const decimal1 = americanToDecimal(odds1);
-            const decimal2 = americanToDecimal(odds2);
-            
-            // Calculate new stake2 for optimal arbitrage
-            const roundedStake2 = roundedStake1 * decimal1 / decimal2;
-
-            // Update both stakes
+            // Update both stakes (no re-calculation, just round both)
             document.getElementById('stake1').value = roundedStake1.toFixed(2);
             document.getElementById('stake2').value = roundedStake2.toFixed(2);
 
-            // Recalculate
+            // Recalculate profit with rounded stakes
             lastEdited = 'stake1';
-            calculate(true);
+            calculate(false); // Don't re-scale, just calculate with rounded values
             calculateMaxBet();
         }
 

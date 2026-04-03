@@ -320,10 +320,6 @@
                 <div class="value" id="totalAvailable">$0.00</div>
             </div>
             <div class="stat-card">
-                <h3>In Transit</h3>
-                <div class="value pending" id="totalInTransit">$0.00</div>
-            </div>
-            <div class="stat-card">
                 <h3>This Week</h3>
                 <div class="value" id="weeklyChange">$0.00</div>
             </div>
@@ -526,16 +522,13 @@
         // Update dashboard
         function updateDashboard() {
             let totalBalance = 0;
-            let totalPending = 0;
 
             for (let sb in sportsbooks) {
                 totalBalance += sportsbooks[sb].balance;
-                totalPending += sportsbooks[sb].pending;
             }
 
-            document.getElementById('totalBankroll').textContent = formatCurrency(totalBalance + totalPending);
+            document.getElementById('totalBankroll').textContent = formatCurrency(totalBalance);
             document.getElementById('totalAvailable').textContent = formatCurrency(totalBalance);
-            document.getElementById('totalInTransit').textContent = formatCurrency(totalPending);
 
             // Weekly change (simplified - last 7 days)
             const weekAgo = new Date();
@@ -565,7 +558,6 @@
                         <div class="balance">${formatCurrency(sportsbooks[sb].balance)}</div>
                         <div class="details">
                             <span>Available</span>
-                            ${sportsbooks[sb].pending > 0 ? `<span style="color: #ffa502;">+ ${formatCurrency(sportsbooks[sb].pending)} in transit</span>` : ''}
                         </div>
                     `;
                     grid.appendChild(card);
@@ -652,12 +644,8 @@
                 return;
             }
 
-            // Update balance (subtract from available, add to pending if not instant)
-            if (processing === 'instant') {
-                sportsbooks[sportsbook].balance -= amount;
-            } else {
-                sportsbooks[sportsbook].pending += amount;
-            }
+            // Update balance (subtract immediately)
+            sportsbooks[sportsbook].balance -= amount;
 
             // Add transaction
             transactions.push({
@@ -692,14 +680,9 @@
                 return;
             }
 
-            // Update balances
-            if (processing === 'instant') {
-                sportsbooks[from].balance -= amount;
-                sportsbooks[to].balance += amount;
-            } else {
-                sportsbooks[from].pending += amount;
-                sportsbooks[to].pending += amount;
-            }
+            // Update balances (instant only - no pending tracking)
+            sportsbooks[from].balance -= amount;
+            sportsbooks[to].balance += amount;
 
             // Add transaction
             transactions.push({

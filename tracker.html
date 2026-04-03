@@ -619,10 +619,11 @@
             const list = document.getElementById('transactionList');
             list.innerHTML = '';
 
-            // Sort by date (newest first)
-            const sorted = [...transactions].sort((a, b) => new Date(b.date) - new Date(a.date));
+            // Sort by date (newest first) and keep track of original indices
+            const sorted = transactions.map((t, i) => ({ ...t, originalIndex: i }))
+                .sort((a, b) => new Date(b.date) - new Date(a.date));
 
-            sorted.forEach((t, index) => {
+            sorted.forEach((t) => {
                 const item = document.createElement('div');
                 item.className = 'transaction-item';
                 item.innerHTML = `
@@ -635,8 +636,8 @@
                         ${t.type === 'deposit' ? '+' : t.type === 'withdrawal' ? '-' : '↔'}${formatCurrency(t.amount)}
                     </div>
                     <div class="actions">
-                        <button class="btn-edit" onclick="editTransaction(${index})">Edit</button>
-                        <button class="btn-delete" onclick="deleteTransaction(${index})">Delete</button>
+                        <button class="btn-edit" onclick="editTransaction(${t.originalIndex})">Edit</button>
+                        <button class="btn-delete" onclick="deleteTransaction(${t.originalIndex})">Delete</button>
                     </div>
                 `;
                 list.appendChild(item);

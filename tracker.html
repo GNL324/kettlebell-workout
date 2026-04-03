@@ -517,17 +517,6 @@
     </div>
 
     <script>
-        // Initialize sportsbooks
-        let sportsbooks = {
-            'DraftKings': { balance: 1.06, pending: 0 },
-            'FanDuel': { balance: 0.33, pending: 0 },
-            'BetMGM': { balance: 35.09, pending: 20.00 },
-            'theScore BET': { balance: 40.08, pending: 0 },
-            'BetRivers': { balance: 0.00, pending: 0 },
-            'Fanatics': { balance: 10.00, pending: 0 },
-            'Kalshi': { balance: 0.00, pending: 0 }
-        };
-
         // Available sportsbooks (for dropdowns)
         const availableSportsbooks = [
             'DraftKings',
@@ -538,6 +527,26 @@
             'Fanatics',
             'Kalshi'
         ];
+
+        // Initialize sportsbooks - try to load from localStorage first, otherwise start fresh
+        function initializeSportsbooks() {
+            const stored = localStorage.getItem('gnl_sportsbooks');
+            if (stored) {
+                try {
+                    return JSON.parse(stored);
+                } catch (e) {
+                    console.log('Could not parse stored sportsbooks, starting fresh');
+                }
+            }
+            // Start with zero balances
+            const fresh = {};
+            availableSportsbooks.forEach(sb => {
+                fresh[sb] = { balance: 0.00, pending: 0 };
+            });
+            return fresh;
+        }
+
+        let sportsbooks = initializeSportsbooks();
 
         // Initialize transactions
         let transactions = JSON.parse(localStorage.getItem('gnl_transactions')) || [

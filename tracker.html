@@ -381,6 +381,13 @@
             <button class="btn btn-transfer" onclick="openModal('transfer')">↔ Transfer</button>
         </div>
 
+        <!-- Reset Button -->
+        <div style="text-align: center; margin-bottom: 20px;">
+            <button onclick="resetAll()" style="padding: 10px 20px; background: rgba(255, 71, 87, 0.2); border: 1px solid rgba(255, 71, 87, 0.5); border-radius: 8px; color: #ff4757; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.3s;">
+                🗑️ Reset All Data
+            </button>
+        </div>
+
         <!-- Sportsbooks -->
         <div class="section">
             <h2>📊 Sportsbook Balances</h2>
@@ -934,6 +941,35 @@
             renderTransactions();
             closeModal('transfer');
         };
+
+        // Reset all data
+        function resetAll() {
+            if (!confirm('⚠️ WARNING: This will delete ALL your data!\n\n• All sportsbook balances → $0\n• All transactions → Deleted\n• All data will be lost!\n\nThis cannot be undone. Are you sure?')) {
+                return;
+            }
+
+            // Clear localStorage
+            localStorage.removeItem('gnl_sportsbooks');
+            localStorage.removeItem('gnl_transactions');
+
+            // Reset sportsbooks to zero
+            sportsbooks = {};
+            availableSportsbooks.forEach(sb => {
+                sportsbooks[sb] = { balance: 0.00, pending: 0 };
+            });
+
+            // Clear transactions
+            transactions = [];
+
+            // Save and refresh display
+            saveTransactions();
+            saveSportsbooks();
+            updateDashboard();
+            renderSportsbooks();
+            renderTransactions();
+
+            alert('✅ All data has been reset to $0');
+        }
 
         // Initialize
         updateDashboard();

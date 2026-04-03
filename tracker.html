@@ -551,12 +551,33 @@
             // Start with zero balances
             const fresh = {};
             availableSportsbooks.forEach(sb => {
-                fresh[sb] = { balance: 0.00, pending: 0 };
+                fresh[sb] = { balance: 0.00, inUse: 0.00 };
             });
             return fresh;
         }
 
         let sportsbooks = initializeSportsbooks();
+
+        // Load active bets and calculate inUse amounts
+        function loadActiveBets() {
+            const bets = JSON.parse(localStorage.getItem('gnl_bets')) || [];
+            const activeBets = bets.filter(b => b.status === 'pending');
+            
+            // Reset inUse to zero
+            for (let sb in sportsbooks) {
+                sportsbooks[sb].inUse = 0.00;
+            }
+            
+            // Add up stakes from active bets
+            activeBets.forEach(bet => {
+                if (sportsbooks[bet.book1]) {
+                    sportsbooks[bet.book1].inUse += parseFloat(bet.stake1) || 0;
+                }
+                if (sportsbooks[bet.book2]) {
+                    sportsbooks[bet.book2].inUse += parseFloat(bet.stake2) || 0;
+                }
+            });
+        }
 
         // Initialize transactions
         let transactions = JSON.parse(localStorage.getItem('gnl_transactions')) || [
@@ -590,13 +611,15 @@
         // Update dashboard
         function updateDashboard() {
             let totalBalance = 0;
+            let totalInUse = 0;
 
             for (let sb in sportsbooks) {
                 totalBalance += sportsbooks[sb].balance;
+                totalInUse += sportsbooks[sb].inUse;
             }
 
             document.getElementById('totalBankroll').textContent = formatCurrency(totalBalance);
-            document.getElementById('totalAvailable').textContent = formatCurrency(totalBalance);
+            document.getElementById('totalAvailable').textContent = formatCurrency(totalBalance - totalInUse);
 
             // Weekly change (simplified - last 7 days)
             const weekAgo = new Date();
@@ -619,13 +642,15 @@
 
             availableSportsbooks.forEach(sb => {
                 if (sportsbooks[sb]) {
+                    const available = sportsbooks[sb].balance - sportsbooks[sb].inUse;
                     const card = document.createElement('div');
                     card.className = 'sportsbook-card';
                     card.innerHTML = `
                         <div class="name">${sb}</div>
                         <div class="balance">${formatCurrency(sportsbooks[sb].balance)}</div>
                         <div class="details">
-                            <span>Available</span>
+                            <span>Available: ${formatCurrency(available)}</span>
+                            ${sportsbooks[sb].inUse > 0 ? `<span style="color: #ffa502;"> • In Use: ${formatCurrency(sportsbooks[sb].inUse)}</span>` : ''}
                         </div>
                     `;
                     grid.appendChild(card);
@@ -975,6 +1000,7 @@
         }
 
         // Initialize
+        loadActiveBets();
         updateDashboard();
         renderSportsbooks();
         renderTransactions();

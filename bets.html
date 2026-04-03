@@ -881,6 +881,10 @@
 
             bets.unshift(newBet); // Add to beginning
             saveBets();
+            
+            // Update bankroll inUse amounts
+            updateBankrollInUse();
+            
             updateStats();
             renderBets();
             closeAddModal();
@@ -906,6 +910,32 @@
                 reader.onload = () => resolve(reader.result);
                 reader.onerror = error => reject(error);
             });
+        }
+
+        // Update bankroll inUse amounts when bet is added/edited
+        function updateBankrollInUse() {
+            // Load current sportsbooks
+            const sportsbooks = JSON.parse(localStorage.getItem('gnl_sportsbooks')) || {};
+            
+            // Reset inUse to zero
+            for (let sb in sportsbooks) {
+                if (!sportsbooks[sb].inUse) sportsbooks[sb].inUse = 0;
+                sportsbooks[sb].inUse = 0.00;
+            }
+            
+            // Add up stakes from active bets
+            const activeBets = bets.filter(b => b.status === 'pending');
+            activeBets.forEach(bet => {
+                if (sportsbooks[bet.book1]) {
+                    sportsbooks[bet.book1].inUse += parseFloat(bet.stake1) || 0;
+                }
+                if (sportsbooks[bet.book2]) {
+                    sportsbooks[bet.book2].inUse += parseFloat(bet.stake2) || 0;
+                }
+            });
+            
+            // Save back to localStorage (calculator reads this)
+            localStorage.setItem('gnl_sportsbooks', JSON.stringify(sportsbooks));
         }
 
         // Initialize

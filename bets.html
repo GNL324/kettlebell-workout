@@ -538,8 +538,18 @@
             </div>
         </div>
 
-        <!-- Add Bet Button -->
-        <button class="add-btn" onclick="openAddModal()">+ Add New Bet</button>
+        <!-- Data Management -->
+        <div style="display: flex; gap: 10px; margin-bottom: 30px; flex-wrap: wrap;">
+            <button class="add-btn" onclick="openAddModal()" style="flex: 1; min-width: 200px; margin-bottom: 0;">+ Add New Bet</button>
+            <button onclick="syncBetsToGitHub()" style="padding: 15px 20px; background: linear-gradient(135deg, #00d9ff, #00ff88); border: none; border-radius: 12px; color: #000; font-size: 14px; font-weight: bold; cursor: pointer; transition: all 0.2s; box-shadow: 0 0 15px rgba(0, 217, 255, 0.4);">🔄 Save / Sync</button>
+            <button onclick="loadBetsFromGitHub()" style="padding: 15px 20px; background: rgba(0, 217, 255, 0.2); border: 1px solid rgba(0, 217, 255, 0.5); border-radius: 12px; color: #00d9ff; font-size: 14px; font-weight: bold; cursor: pointer; transition: all 0.2s;">📥 Load from GitHub</button>
+            <button onclick="exportBets()" style="padding: 15px 20px; background: rgba(0, 217, 255, 0.2); border: 1px solid rgba(0, 217, 255, 0.5); border-radius: 12px; color: #00d9ff; font-size: 14px; font-weight: bold; cursor: pointer; transition: all 0.2s;">💾 Export Local</button>
+            <button onclick="document.getElementById('importBetsFile').click()" style="padding: 15px 20px; background: rgba(0, 255, 136, 0.2); border: 1px solid rgba(0, 255, 136, 0.5); border-radius: 12px; color: #00ff88; font-size: 14px; font-weight: bold; cursor: pointer; transition: all 0.2s;">📂 Import File</button>
+            <input type="file" id="importBetsFile" accept=".json" style="display: none;" onchange="importBets(this)">
+        </div>
+        <div style="text-align: center; margin-bottom: 20px; color: #888; font-size: 12px;">
+            💡 <strong>Sync:</strong> Click "Save/Sync" → Download JSON → Commit to GitHub → Load on other browsers
+        </div>
 
         <!-- Bet List -->
         <div class="bet-list" id="betList"></div>
@@ -1129,6 +1139,117 @@
 
             // Save back to localStorage
             localStorage.setItem('gnl_sportsbooks', JSON.stringify(sportsbooks));
+        }
+
+        // Sync/Save bets to GitHub (downloads JSON for manual commit)
+        function syncBetsToGitHub() {
+            const data = {
+                lastUpdated: new Date().toISOString(),
+                version: "1.0",
+                bets: bets
+            };
+
+            const dataStr = JSON.stringify(data, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'bet-history-data.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            // Show sync instructions
+            alert(`✅ Bet history saved to bet-history-data.json!\n\n📋 To sync to GitHub:\n\n1. Go to: https://github.com/GNL324/kettlebell-workout\n2. Click "Add file" → "Upload files"\n3. Select the downloaded bet-history-data.json\n4. Commit the changes\n\n📥 Then on other browsers:\n• Click "Load from GitHub" button\n• Or import the file manually\n\n💡 Tip: Bookmark the GitHub page for quick sync!`);
+        }
+
+        // Load bets from GitHub (fetches bet-history-data.json)
+        async function loadBetsFromGitHub() {
+            try {
+                const response = await fetch('https://gnl324.github.io/kettlebell-workout/bet-history-data.json');
+                
+                if (!response.ok) {
+                    throw new Error('File not found on GitHub');
+                }
+
+                const data = await response.json();
+
+                if (!data.bets || !Array.isArray(data.bets)) {
+                    throw new Error('Invalid data format');
+                }
+
+                // Import bets
+                bets = data.bets;
+                localStorage.setItem('gnl_bets', JSON.stringify(bets));
+
+                // Refresh UI
+                updateStats();
+                renderBets();
+                updateBankrollInUse();
+
+                alert(`✅ Bet history loaded from GitHub!\n\nLast updated: ${data.lastUpdated || 'Unknown'}\nTotal bets: ${bets.length}`);
+
+            } catch (err) {
+                alert('❌ Could not load from GitHub:\n' + err.message + '\n\nMake sure bet-history-data.json exists in the GitHub repo.\n\nAlternatively, use "Import File" to load a local JSON.');
+            }
+        }
+
+        // Export bets to JSON file (local backup)
+        function exportBets() {
+            const data = {
+                lastUpdated: new Date().toISOString(),
+                version: "1.0",
+                bets: bets
+            };
+
+            const dataStr = JSON.stringify(data, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `bet-history-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            alert('✅ Bet history exported locally!\n\nSave this JSON file for backup or import on other browsers.');
+        }
+
+        // Import bets from JSON file
+        function importBets(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+
+                    if (!data.bets || !Array.isArray(data.bets)) {
+                        throw new Error('Invalid data format');
+                    }
+
+                    // Import bets
+                    bets = data.bets;
+                    localStorage.setItem('gnl_bets', JSON.stringify(bets));
+
+                    // Refresh UI
+                    updateStats();
+                    renderBets();
+                    updateBankrollInUse();
+
+                    alert(`✅ Bet history imported successfully!\n\nLast updated: ${data.lastUpdated || 'Unknown'}\nTotal bets: ${bets.length}`);
+
+                } catch (err) {
+                    alert('❌ Error importing bets:\n' + err.message + '\n\nMake sure the file is a valid bet-history.json export.');
+                }
+            };
+            reader.readAsText(file);
+            input.value = ''; // Reset file input
         }
 
         // Initialize

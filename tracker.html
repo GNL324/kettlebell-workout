@@ -384,11 +384,27 @@
             <button class="btn btn-transfer" onclick="openModal('transfer')">↔ Transfer</button>
         </div>
 
-        <!-- Reset Button -->
-        <div style="text-align: center; margin-bottom: 20px;">
-            <button onclick="resetAll()" style="padding: 10px 20px; background: rgba(255, 71, 87, 0.2); border: 1px solid rgba(255, 71, 87, 0.5); border-radius: 8px; color: #ff4757; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.3s;">
-                🗑️ Reset All Data
+        <!-- Data Management -->
+        <div style="text-align: center; margin-bottom: 20px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+            <button onclick="syncToGitHub()" style="padding: 10px 20px; background: linear-gradient(135deg, #00d9ff, #00ff88); border: none; border-radius: 8px; color: #000; font-size: 13px; font-weight: bold; cursor: pointer; transition: all 0.3s; box-shadow: 0 0 15px rgba(0, 217, 255, 0.4);">
+                🔄 Save / Sync to GitHub
             </button>
+            <button onclick="loadFromGitHub()" style="padding: 10px 20px; background: rgba(0, 217, 255, 0.2); border: 1px solid rgba(0, 217, 255, 0.5); border-radius: 8px; color: #00d9ff; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.3s;">
+                📥 Load from GitHub
+            </button>
+            <button onclick="exportData()" style="padding: 10px 20px; background: rgba(0, 217, 255, 0.2); border: 1px solid rgba(0, 217, 255, 0.5); border-radius: 8px; color: #00d9ff; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.3s;">
+                💾 Export Local
+            </button>
+            <button onclick="document.getElementById('importFile').click()" style="padding: 10px 20px; background: rgba(0, 255, 136, 0.2); border: 1px solid rgba(0, 255, 136, 0.5); border-radius: 8px; color: #00ff88; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.3s;">
+                📂 Import File
+            </button>
+            <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importData(this)">
+            <button onclick="resetAll()" style="padding: 10px 20px; background: rgba(255, 71, 87, 0.2); border: 1px solid rgba(255, 71, 87, 0.5); border-radius: 8px; color: #ff4757; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.3s;">
+                🗑️ Reset
+            </button>
+        </div>
+        <div style="text-align: center; margin-bottom: 20px; color: #888; font-size: 12px;">
+            💡 <strong>Sync:</strong> Click "Save/Sync" → Download JSON → Commit to GitHub → Load on other browsers
         </div>
 
         <!-- Sportsbooks -->
@@ -960,6 +976,127 @@
             closeModal('transfer');
         };
 
+        // Sync/Save to GitHub (downloads JSON for manual commit)
+        function syncToGitHub() {
+            const data = {
+                lastUpdated: new Date().toISOString(),
+                version: "1.0",
+                sportsbooks: sportsbooks,
+                transactions: transactions
+            };
+
+            const dataStr = JSON.stringify(data, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'bankroll-data.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            // Show sync instructions
+            alert(`✅ Data saved to bankroll-data.json!\n\n📋 To sync to GitHub:\n\n1. Go to: https://github.com/GNL324/kettlebell-workout\n2. Click "Add file" → "Upload files"\n3. Select the downloaded bankroll-data.json\n4. Commit the changes\n\n📥 Then on other browsers:\n• Click "Load from GitHub" button\n• Or import the file manually\n\n💡 Tip: Bookmark the GitHub page for quick sync!`);
+        }
+
+        // Load data from GitHub (fetches bankroll-data.json)
+        async function loadFromGitHub() {
+            try {
+                const response = await fetch('https://gnl324.github.io/kettlebell-workout/bankroll-data.json');
+                
+                if (!response.ok) {
+                    throw new Error('File not found on GitHub');
+                }
+
+                const data = await response.json();
+
+                if (!data.sportsbooks || !data.transactions) {
+                    throw new Error('Invalid data format');
+                }
+
+                // Import sportsbooks
+                sportsbooks = data.sportsbooks;
+                localStorage.setItem('gnl_sportsbooks', JSON.stringify(sportsbooks));
+
+                // Import transactions
+                transactions = data.transactions;
+                localStorage.setItem('gnl_transactions', JSON.stringify(transactions));
+
+                // Refresh UI
+                updateDashboard();
+                renderSportsbooks();
+                renderTransactions();
+
+                alert(`✅ Data loaded from GitHub!\n\nLast updated: ${data.lastUpdated || 'Unknown'}\nSportsbooks: ${Object.keys(sportsbooks).length}\nTransactions: ${transactions.length}`);
+
+            } catch (err) {
+                alert('❌ Could not load from GitHub:\n' + err.message + '\n\nMake sure bankroll-data.json exists in the GitHub repo.\n\nAlternatively, use "Import File" to load a local JSON.');
+            }
+        }
+
+        // Export data to JSON file (local backup)
+        function exportData() {
+            const data = {
+                lastUpdated: new Date().toISOString(),
+                version: "1.0",
+                sportsbooks: sportsbooks,
+                transactions: transactions
+            };
+
+            const dataStr = JSON.stringify(data, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `bankroll-data-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            alert('✅ Data exported locally!\n\nSave this JSON file for backup or import on other browsers.');
+        }
+
+        // Import data from JSON file
+        function importData(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+
+                    if (!data.sportsbooks || !data.transactions) {
+                        throw new Error('Invalid data format');
+                    }
+
+                    // Import sportsbooks
+                    sportsbooks = data.sportsbooks;
+                    localStorage.setItem('gnl_sportsbooks', JSON.stringify(sportsbooks));
+
+                    // Import transactions
+                    transactions = data.transactions;
+                    localStorage.setItem('gnl_transactions', JSON.stringify(transactions));
+
+                    // Refresh UI
+                    updateDashboard();
+                    renderSportsbooks();
+                    renderTransactions();
+
+                    alert(`✅ Data imported successfully!\n\nLast updated: ${data.lastUpdated || 'Unknown'}\nSportsbooks: ${Object.keys(sportsbooks).length}\nTransactions: ${transactions.length}`);
+
+                } catch (err) {
+                    alert('❌ Error importing data:\n' + err.message + '\n\nMake sure the file is a valid bankroll-data.json export.');
+                }
+            };
+            reader.readAsText(file);
+            input.value = ''; // Reset file input
+        }
+
         // Reset all data
         function resetAll() {
             if (!confirm('⚠️ WARNING: This will delete ALL your data!\n\n• All sportsbook balances → $0\n• All transactions → Deleted\n• All data will be lost!\n\nThis cannot be undone. Are you sure?')) {
@@ -973,7 +1110,7 @@
             // Reset sportsbooks to zero
             sportsbooks = {};
             availableSportsbooks.forEach(sb => {
-                sportsbooks[sb] = { balance: 0.00, pending: 0 };
+                sportsbooks[sb] = { balance: 0.00, inUse: 0.00 };
             });
 
             // Clear transactions

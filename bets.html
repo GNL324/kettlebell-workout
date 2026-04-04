@@ -880,6 +880,11 @@
                             <span class="winner-name">${bet.status}</span>
                         </div>
                     ` : ''}
+
+                    <div class="bet-edit-actions" style="display: flex; gap: 10px; justify-content: center; margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+                        <button class="btn" onclick="editBet(${bet.id})" style="padding: 10px 20px; background: rgba(0, 217, 255, 0.2); border: 1px solid rgba(0, 217, 255, 0.5); border-radius: 8px; color: #00d9ff; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s;">✏️ Edit Bet</button>
+                        <button class="btn" onclick="deleteBet(${bet.id})" style="padding: 10px 20px; background: rgba(255, 71, 87, 0.2); border: 1px solid rgba(255, 71, 87, 0.5); border-radius: 8px; color: #ff4757; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s;">🗑️ Delete</button>
+                    </div>
                 `;
 
                 list.appendChild(card);
@@ -921,23 +926,20 @@
         }
 
         async function saveBet() {
-            const event = document.getElementById('betEvent').value;
-            const book1 = document.getElementById('betBook1').value;
-            const book2 = document.getElementById('betBook2').value;
-            const outcome1 = document.getElementById('betOutcome1').value;
-            const outcome2 = document.getElementById('betOutcome2').value;
-            const odds1 = document.getElementById('betOdds1').value;
-            const odds2 = document.getElementById('betOdds2').value;
-            const stake1 = parseFloat(document.getElementById('betStake1').value);
-            const stake2 = parseFloat(document.getElementById('betStake2').value);
-            const profit = parseFloat(document.getElementById('betProfit').value);
-            const status = document.getElementById('betStatus').value;
-            const date = document.getElementById('betDate').value;
+            const event = document.getElementById('betEvent').value || '';
+            const book1 = document.getElementById('betBook1').value || '';
+            const book2 = document.getElementById('betBook2').value || '';
+            const outcome1 = document.getElementById('betOutcome1').value || '';
+            const outcome2 = document.getElementById('betOutcome2').value || '';
+            const odds1 = document.getElementById('betOdds1').value || '';
+            const odds2 = document.getElementById('betOdds2').value || '';
+            const stake1 = parseFloat(document.getElementById('betStake1').value) || 0;
+            const stake2 = parseFloat(document.getElementById('betStake2').value) || 0;
+            const profit = parseFloat(document.getElementById('betProfit').value) || 0;
+            const status = document.getElementById('betStatus').value || 'pending';
+            const date = document.getElementById('betDate').value || new Date().toISOString().slice(0, 16);
 
-            if (!event || !book1 || !book2 || !profit || !date) {
-                alert('Please fill in all required fields (Event, both books, profit, date)');
-                return;
-            }
+            // No validation - allow saving with any/all fields empty
 
             // Process images (convert to base64 for localStorage)
             const proofs = [];
@@ -1251,6 +1253,161 @@
             reader.readAsText(file);
             input.value = ''; // Reset file input
         }
+
+        // Edit bet function
+        function editBet(betId) {
+            const bet = bets.find(b => b.id === betId);
+            if (!bet) return;
+
+            // Populate form with bet data
+            document.getElementById('betEvent').value = bet.event || '';
+            document.getElementById('betBook1').value = bet.book1 || '';
+            document.getElementById('betBook2').value = bet.book2 || '';
+            document.getElementById('betOutcome1').value = bet.outcome1 || '';
+            document.getElementById('betOutcome2').value = bet.outcome2 || '';
+            document.getElementById('betOdds1').value = bet.odds1 || '';
+            document.getElementById('betOdds2').value = bet.odds2 || '';
+            document.getElementById('betStake1').value = bet.stake1 || '';
+            document.getElementById('betStake2').value = bet.stake2 || '';
+            document.getElementById('betProfit').value = bet.profit || '';
+            document.getElementById('betStatus').value = bet.status || 'pending';
+            document.getElementById('betDate').value = bet.date || '';
+
+            // Store the bet ID for update
+            window.editingBetId = betId;
+            window.isEditMode = true;
+
+            // Open modal
+            document.getElementById('addModal').classList.add('active');
+        }
+
+        // Delete bet function
+        function deleteBet(betId) {
+            const bet = bets.find(b => b.id === betId);
+            if (!bet) return;
+
+            if (!confirm(`Delete this bet?\n\nEvent: ${bet.event || 'N/A'}\nThis cannot be undone.`)) {
+                return;
+            }
+
+            // Remove bet from array
+            bets = bets.filter(b => b.id !== betId);
+            saveBets();
+
+            // Update bankroll inUse amounts
+            updateBankrollInUse();
+
+            // Update UI
+            updateStats();
+            renderBets();
+
+            alert('✅ Bet deleted');
+        }
+
+        // Override saveBet to handle edit mode
+        const originalSaveBet = saveBet;
+        saveBet = async function() {
+            const event = document.getElementById('betEvent').value || '';
+            const book1 = document.getElementById('betBook1').value || '';
+            const book2 = document.getElementById('betBook2').value || '';
+            const outcome1 = document.getElementById('betOutcome1').value || '';
+            const outcome2 = document.getElementById('betOutcome2').value || '';
+            const odds1 = document.getElementById('betOdds1').value || '';
+            const odds2 = document.getElementById('betOdds2').value || '';
+            const stake1 = parseFloat(document.getElementById('betStake1').value) || 0;
+            const stake2 = parseFloat(document.getElementById('betStake2').value) || 0;
+            const profit = parseFloat(document.getElementById('betProfit').value) || 0;
+            const status = document.getElementById('betStatus').value || 'pending';
+            const date = document.getElementById('betDate').value || new Date().toISOString().slice(0, 16);
+
+            // Process images (convert to base64 for localStorage)
+            const proofs = [];
+            for (const file of selectedFiles) {
+                try {
+                    const base64 = await fileToBase64(file);
+                    proofs.push(base64);
+                } catch (e) {
+                    console.log('Could not process file:', file.name);
+                }
+            }
+
+            if (window.isEditMode && window.editingBetId) {
+                // Update existing bet
+                const betIndex = bets.findIndex(b => b.id === window.editingBetId);
+                if (betIndex !== -1) {
+                    // Keep existing proofs if no new ones uploaded
+                    const existingProofs = bets[betIndex].proofs || [];
+                    const finalProofs = proofs.length > 0 ? proofs : existingProofs;
+
+                    bets[betIndex] = {
+                        ...bets[betIndex],
+                        event,
+                        book1,
+                        book2,
+                        outcome1,
+                        outcome2,
+                        odds1,
+                        odds2,
+                        stake1,
+                        stake2,
+                        profit,
+                        status,
+                        date,
+                        proofs: finalProofs
+                    };
+
+                    saveBets();
+                    updateBankrollInUse();
+                    updateStats();
+                    renderBets();
+                    closeAddModal();
+
+                    // Reset edit mode
+                    delete window.editingBetId;
+                    delete window.isEditMode;
+
+                    alert('✅ Bet updated!');
+                }
+            } else {
+                // Create new bet
+                const newBet = {
+                    id: Date.now(),
+                    event,
+                    book1,
+                    book2,
+                    outcome1,
+                    outcome2,
+                    odds1,
+                    odds2,
+                    stake1,
+                    stake2,
+                    profit,
+                    status,
+                    date,
+                    proofs
+                };
+
+                bets.unshift(newBet);
+                saveBets();
+                updateBankrollInUse();
+                updateStats();
+                renderBets();
+                closeAddModal();
+
+                // Clear form
+                document.getElementById('betEvent').value = '';
+                document.getElementById('betBook1').value = '';
+                document.getElementById('betBook2').value = '';
+                document.getElementById('betOutcome1').value = '';
+                document.getElementById('betOutcome2').value = '';
+                document.getElementById('betOdds1').value = '';
+                document.getElementById('betOdds2').value = '';
+                document.getElementById('betStake1').value = '';
+                document.getElementById('betStake2').value = '';
+                document.getElementById('betProfit').value = '';
+                document.getElementById('betStatus').value = 'pending';
+            }
+        };
 
         // Initialize
         updateStats();

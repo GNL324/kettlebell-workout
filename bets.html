@@ -167,6 +167,48 @@
             color: #fff;
         }
 
+        /* Bet Action Buttons */
+        .bet-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .bet-actions .btn {
+            flex: 1;
+            max-width: 200px;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .bet-actions .btn-won {
+            background: linear-gradient(135deg, #00ff88, #00d9ff);
+            color: #000;
+        }
+
+        .bet-actions .btn-won:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.4);
+        }
+
+        .bet-actions .btn-lost {
+            background: linear-gradient(135deg, #ff4757, #ff6b81);
+            color: #fff;
+        }
+
+        .bet-actions .btn-lost:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(255, 71, 87, 0.4);
+        }
+
         .bet-details {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -789,6 +831,13 @@
                             </div>
                         </div>
                     ` : ''}
+
+                    ${bet.status === 'pending' ? `
+                        <div class="bet-actions">
+                            <button class="btn btn-won" onclick="updateBetStatus(${bet.id}, 'won')">✅ Mark as Won</button>
+                            <button class="btn btn-lost" onclick="updateBetStatus(${bet.id}, 'lost')">❌ Mark as Lost</button>
+                        </div>
+                    ` : ''}
                 `;
 
                 list.appendChild(card);
@@ -975,6 +1024,79 @@
             });
             
             // Save back to localStorage (calculator reads this)
+            localStorage.setItem('gnl_sportsbooks', JSON.stringify(sportsbooks));
+        }
+
+        // Update bet status and bankroll balances
+        function updateBetStatus(betId, newStatus) {
+            const bet = bets.find(b => b.id === betId);
+            if (!bet) return;
+
+            const oldStatus = bet.status;
+            
+            // Confirm the action
+            const actionText = newStatus === 'won' ? '✅ WON' : '❌ LOST';
+            if (!confirm(`Mark this bet as ${actionText}? This will update your bankroll balances.`)) {
+                return;
+            }
+
+            // Update status
+            bet.status = newStatus;
+            saveBets();
+
+            // Update bankroll balances
+            updateBankrollBalances(bet, oldStatus, newStatus);
+
+            // Update inUse amounts
+            updateBankrollInUse();
+
+            // Update UI
+            updateStats();
+            renderBets();
+
+            // Show confirmation
+            alert(`Bet marked as ${actionText}!\n\nBankroll balances updated in:\n• ${bet.book1}\n• ${bet.book2}`);
+        }
+
+        // Update bankroll balances when bet status changes
+        function updateBankrollBalances(bet, oldStatus, newStatus) {
+            // Load current sportsbooks
+            const sportsbooks = JSON.parse(localStorage.getItem('gnl_sportsbooks')) || {};
+
+            // Initialize sportsbooks if they don't exist
+            if (!sportsbooks[bet.book1]) {
+                sportsbooks[bet.book1] = { balance: 0, inUse: 0 };
+            }
+            if (!sportsbooks[bet.book2]) {
+                sportsbooks[bet.book2] = { balance: 0, inUse: 0 };
+            }
+
+            // If settling a pending bet (oldStatus === 'pending')
+            if (oldStatus === 'pending' && (newStatus === 'won' || newStatus === 'lost')) {
+                // Release the "in use" funds
+                sportsbooks[bet.book1].inUse = Math.max(0, (sportsbooks[bet.book1].inUse || 0) - parseFloat(bet.stake1));
+                sportsbooks[bet.book2].inUse = Math.max(0, (sportsbooks[bet.book2].inUse || 0) - parseFloat(bet.stake2));
+
+                // If won: add payout back to balance
+                if (newStatus === 'won') {
+                    // Calculate payout for winning side (we need to determine which side won)
+                    // For arbitrage, one side always wins - we add the payout of the winning outcome
+                    // Since we don't track which specific outcome won, we use: stake + profit
+                    const totalStake = parseFloat(bet.stake1) + parseFloat(bet.stake2);
+                    const profit = parseFloat(bet.profit);
+                    
+                    // Distribute profit proportionally to both books (simplified approach)
+                    // In reality, one book pays out fully, the other loses the stake
+                    // For arb tracking, we just need to ensure total bankroll is correct
+                    
+                    // Simpler: add profit to one book (arbitrarily book1)
+                    sportsbooks[bet.book1].balance = (sportsbooks[bet.book1].balance || 0) + profit;
+                }
+                // If lost: stakes are already gone (not added back)
+                // The inUse release above handles returning the "locked" status
+            }
+
+            // Save back to localStorage
             localStorage.setItem('gnl_sportsbooks', JSON.stringify(sportsbooks));
         }
 

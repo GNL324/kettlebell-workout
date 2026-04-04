@@ -183,30 +183,55 @@
             padding: 12px 20px;
             border: none;
             border-radius: 8px;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: bold;
             cursor: pointer;
             transition: all 0.2s;
         }
 
-        .bet-actions .btn-won {
+        .bet-actions .btn-book1 {
             background: linear-gradient(135deg, #00ff88, #00d9ff);
             color: #000;
         }
 
-        .bet-actions .btn-won:hover {
+        .bet-actions .btn-book1:hover {
             transform: scale(1.05);
             box-shadow: 0 0 20px rgba(0, 255, 136, 0.4);
         }
 
-        .bet-actions .btn-lost {
-            background: linear-gradient(135deg, #ff4757, #ff6b81);
-            color: #fff;
+        .bet-actions .btn-book2 {
+            background: linear-gradient(135deg, #ffa502, #ff7f50);
+            color: #000;
         }
 
-        .bet-actions .btn-lost:hover {
+        .bet-actions .btn-book2:hover {
             transform: scale(1.05);
-            box-shadow: 0 0 20px rgba(255, 71, 87, 0.4);
+            box-shadow: 0 0 20px rgba(255, 165, 2, 0.4);
+        }
+
+        /* Winner Display */
+        .bet-winner {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .winner-label {
+            color: #888;
+            font-size: 14px;
+        }
+
+        .winner-name {
+            background: linear-gradient(135deg, #00ff88, #00d9ff);
+            color: #000;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
         }
 
         .bet-details {
@@ -758,8 +783,8 @@
                 const card = document.createElement('div');
                 card.className = 'bet-card';
 
-                const statusClass = bet.status === 'won' ? 'won' : bet.status === 'pending' ? 'pending' : 'loss';
-                const statusText = bet.status === 'won' ? '✅ WON' : bet.status === 'pending' ? '⏳ Pending' : '❌ Lost';
+                const statusClass = bet.status !== 'pending' ? 'won' : 'pending';
+                const statusText = bet.status !== 'pending' ? `✅ ${bet.status}` : '⏳ Pending';
 
                 card.innerHTML = `
                     <div class="bet-card-header">
@@ -834,8 +859,15 @@
 
                     ${bet.status === 'pending' ? `
                         <div class="bet-actions">
-                            <button class="btn btn-won" onclick="updateBetStatus(${bet.id}, 'won')">✅ Mark as Won</button>
-                            <button class="btn btn-lost" onclick="updateBetStatus(${bet.id}, 'lost')">❌ Mark as Lost</button>
+                            <button class="btn btn-book1" onclick="updateBetStatus(${bet.id}, '${bet.book1}')">🏆 ${bet.book1} Won</button>
+                            <button class="btn btn-book2" onclick="updateBetStatus(${bet.id}, '${bet.book2}')">🏆 ${bet.book2} Won</button>
+                        </div>
+                    ` : ''}
+
+                    ${bet.status !== 'pending' ? `
+                        <div class="bet-winner">
+                            <span class="winner-label">🏆 Winning Sportsbook:</span>
+                            <span class="winner-name">${bet.status}</span>
                         </div>
                     ` : ''}
                 `;
@@ -1028,24 +1060,23 @@
         }
 
         // Update bet status and bankroll balances
-        function updateBetStatus(betId, newStatus) {
+        function updateBetStatus(betId, winningBook) {
             const bet = bets.find(b => b.id === betId);
             if (!bet) return;
 
             const oldStatus = bet.status;
             
             // Confirm the action
-            const actionText = newStatus === 'won' ? '✅ WON' : '❌ LOST';
-            if (!confirm(`Mark this bet as ${actionText}? This will update your bankroll balances.`)) {
+            if (!confirm(`Mark ${winningBook} as the winning sportsbook? This will update your bankroll balances.`)) {
                 return;
             }
 
-            // Update status
-            bet.status = newStatus;
+            // Update status to the winning sportsbook name
+            bet.status = winningBook;
             saveBets();
 
             // Update bankroll balances
-            updateBankrollBalances(bet, oldStatus, newStatus);
+            updateBankrollBalances(bet, oldStatus, winningBook);
 
             // Update inUse amounts
             updateBankrollInUse();
@@ -1055,11 +1086,11 @@
             renderBets();
 
             // Show confirmation
-            alert(`Bet marked as ${actionText}!\n\nBankroll balances updated in:\n• ${bet.book1}\n• ${bet.book2}`);
+            alert(`Bet settled! ${winningBook} won.\n\nBankroll balances updated:\n• Profit added to ${winningBook}`);
         }
 
         // Update bankroll balances when bet status changes
-        function updateBankrollBalances(bet, oldStatus, newStatus) {
+        function updateBankrollBalances(bet, oldStatus, winningBook) {
             // Load current sportsbooks
             const sportsbooks = JSON.parse(localStorage.getItem('gnl_sportsbooks')) || {};
 
@@ -1072,28 +1103,13 @@
             }
 
             // If settling a pending bet (oldStatus === 'pending')
-            if (oldStatus === 'pending' && (newStatus === 'won' || newStatus === 'lost')) {
-                // Release the "in use" funds
+            if (oldStatus === 'pending' && winningBook) {
+                // Release the "in use" funds from BOTH books
                 sportsbooks[bet.book1].inUse = Math.max(0, (sportsbooks[bet.book1].inUse || 0) - parseFloat(bet.stake1));
                 sportsbooks[bet.book2].inUse = Math.max(0, (sportsbooks[bet.book2].inUse || 0) - parseFloat(bet.stake2));
 
-                // If won: add payout back to balance
-                if (newStatus === 'won') {
-                    // Calculate payout for winning side (we need to determine which side won)
-                    // For arbitrage, one side always wins - we add the payout of the winning outcome
-                    // Since we don't track which specific outcome won, we use: stake + profit
-                    const totalStake = parseFloat(bet.stake1) + parseFloat(bet.stake2);
-                    const profit = parseFloat(bet.profit);
-                    
-                    // Distribute profit proportionally to both books (simplified approach)
-                    // In reality, one book pays out fully, the other loses the stake
-                    // For arb tracking, we just need to ensure total bankroll is correct
-                    
-                    // Simpler: add profit to one book (arbitrarily book1)
-                    sportsbooks[bet.book1].balance = (sportsbooks[bet.book1].balance || 0) + profit;
-                }
-                // If lost: stakes are already gone (not added back)
-                // The inUse release above handles returning the "locked" status
+                // Add profit to the WINNING sportsbook
+                sportsbooks[winningBook].balance = (sportsbooks[winningBook].balance || 0) + parseFloat(bet.profit);
             }
 
             // Save back to localStorage

@@ -340,6 +340,7 @@
             <div style="color: #00d9ff; font-size: 13px; margin-bottom: 5px;">Maximum Bet Based on Available Balances</div>
             <div style="font-size: 24px; font-weight: bold; color: #00ff88;" id="maxBetAmount">$0.00</div>
             <div style="color: #888; font-size: 12px; margin-top: 5px;" id="maxBetDetails"></div>
+            <div style="color: #888; font-size: 12px; margin-top: 8px;" id="maxBetProfit"></div>
         </div>
 
         <div class="calculator">
@@ -563,8 +564,28 @@
             const maxStake2 = maxStake1 * decimal1 / decimal2;
 
             if (maxStake1 > 0 && maxStake2 > 0) {
+                const totalStake = maxStake1 + maxStake2;
+                
+                // Calculate payout and profit at max bet
+                const payout1 = maxStake1 * decimal1;
+                const payout2 = maxStake2 * decimal2;
+                const guaranteedProfit = Math.min(payout1, payout2) - totalStake;
+                const roi = (guaranteedProfit / totalStake) * 100;
+                
                 document.getElementById('maxBetAmount').textContent = '$' + maxStake1.toFixed(2) + ' + $' + maxStake2.toFixed(2);
                 document.getElementById('maxBetDetails').textContent = `${book1}: $${maxStake1.toFixed(2)} (avail: $${balance1.toFixed(2)}) • ${book2}: $${maxStake2.toFixed(2)} (avail: $${balance2.toFixed(2)})`;
+                
+                // Add expected profit line
+                const profitLine = document.getElementById('maxBetProfit');
+                if (profitLine) {
+                    profitLine.textContent = `💰 Expected Profit: +$${guaranteedProfit.toFixed(2)} (${roi.toFixed(2)}% ROI)`;
+                    profitLine.style.display = 'block';
+                    profitLine.style.color = guaranteedProfit > 0 ? '#00ff88' : '#ff4757';
+                    profitLine.style.fontWeight = 'bold';
+                    profitLine.style.marginTop = '8px';
+                    profitLine.style.fontSize = '14px';
+                }
+                
                 maxBetDisplay.style.display = 'block';
 
                 // Check if either balance is very low

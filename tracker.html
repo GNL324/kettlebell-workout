@@ -533,11 +533,16 @@
                     console.log('Could not parse stored sportsbooks, starting fresh');
                 }
             }
-            // Start with zero balances
+            // Start with current known balances (as of 4/4/26 1:26 PM)
             const fresh = {};
             availableSportsbooks.forEach(sb => {
                 fresh[sb] = { balance: 0.00, inUse: 0.00 };
             });
+            // Set default balances if starting fresh
+            fresh['DraftKings'] = { balance: 36.58, inUse: 0.00 };
+            fresh['BetMGM'] = { balance: 6.62, inUse: 0.00 };
+            fresh['theScore BET'] = { balance: 20.08, inUse: 0.00 };
+            fresh['BetRivers'] = { balance: 20.00, inUse: 0.00 };
             return fresh;
         }
 

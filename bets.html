@@ -1108,8 +1108,23 @@
                 sportsbooks[bet.book1].inUse = Math.max(0, (sportsbooks[bet.book1].inUse || 0) - parseFloat(bet.stake1));
                 sportsbooks[bet.book2].inUse = Math.max(0, (sportsbooks[bet.book2].inUse || 0) - parseFloat(bet.stake2));
 
-                // Add profit to the WINNING sportsbook
-                sportsbooks[winningBook].balance = (sportsbooks[winningBook].balance || 0) + parseFloat(bet.profit);
+                // Determine which side won and calculate payout
+                const winningSide = winningBook === bet.book1 ? 'A' : 'B';
+                const stake = winningSide === 'A' ? parseFloat(bet.stake1) : parseFloat(bet.stake2);
+                const oddsStr = winningSide === 'A' ? bet.odds1 : bet.odds2;
+                const odds = parseFloat(oddsStr.replace('+', ''));
+
+                // Calculate payout: stake + profit
+                // For American odds: payout = stake * (1 + odds/100) for positive, stake * (1 + 100/|odds|) for negative
+                let payout;
+                if (odds > 0) {
+                    payout = stake * (1 + odds / 100);
+                } else {
+                    payout = stake * (1 + 100 / Math.abs(odds));
+                }
+
+                // Add full payout (stake + profit) to winning book
+                sportsbooks[winningBook].balance = (sportsbooks[winningBook].balance || 0) + payout;
             }
 
             // Save back to localStorage

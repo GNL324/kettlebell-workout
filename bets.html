@@ -1045,6 +1045,70 @@
             document.getElementById(id).addEventListener('input', calculateProfit);
         });
 
+        // Update bankroll balances for new bet
+        function updateBankrollForNewBet(bet) {
+            // Load current sportsbooks
+            const sportsbooks = JSON.parse(localStorage.getItem('gnl_sportsbooks')) || {};
+            
+            // Initialize sportsbooks if they don't exist
+            if (bet.book1 && !sportsbooks[bet.book1]) {
+                sportsbooks[bet.book1] = { balance: 0, inUse: 0 };
+            }
+            if (bet.book2 && !sportsbooks[bet.book2]) {
+                sportsbooks[bet.book2] = { balance: 0, inUse: 0 };
+            }
+            
+            // If pending, lock the stakes as "in use"
+            if (bet.status === 'pending') {
+                if (bet.book1 && bet.stake1 > 0) {
+                    sportsbooks[bet.book1].inUse = (sportsbooks[bet.book1].inUse || 0) + parseFloat(bet.stake1);
+                }
+                if (bet.book2 && bet.stake2 > 0) {
+                    sportsbooks[bet.book2].inUse = (sportsbooks[bet.book2].inUse || 0) + parseFloat(bet.stake2);
+                }
+            }
+            
+            // Save back to localStorage
+            localStorage.setItem('gnl_sportsbooks', JSON.stringify(sportsbooks));
+        }
+
+        // Update bankroll balances when bet is edited
+        function updateBankrollForBetEdit(oldBet, newBet) {
+            // Load current sportsbooks
+            const sportsbooks = JSON.parse(localStorage.getItem('gnl_sportsbooks')) || {};
+            
+            // Initialize sportsbooks if they don't exist
+            if (newBet.book1 && !sportsbooks[newBet.book1]) {
+                sportsbooks[newBet.book1] = { balance: 0, inUse: 0 };
+            }
+            if (newBet.book2 && !sportsbooks[newBet.book2]) {
+                sportsbooks[newBet.book2] = { balance: 0, inUse: 0 };
+            }
+            
+            // Reverse old stakes (if they were pending)
+            if (oldBet.status === 'pending') {
+                if (oldBet.book1 && oldBet.stake1 > 0) {
+                    sportsbooks[oldBet.book1].inUse = Math.max(0, (sportsbooks[oldBet.book1].inUse || 0) - parseFloat(oldBet.stake1));
+                }
+                if (oldBet.book2 && oldBet.stake2 > 0) {
+                    sportsbooks[oldBet.book2].inUse = Math.max(0, (sportsbooks[oldBet.book2].inUse || 0) - parseFloat(oldBet.stake2));
+                }
+            }
+            
+            // Apply new stakes (if pending)
+            if (newBet.status === 'pending') {
+                if (newBet.book1 && newBet.stake1 > 0) {
+                    sportsbooks[newBet.book1].inUse = (sportsbooks[newBet.book1].inUse || 0) + parseFloat(newBet.stake1);
+                }
+                if (newBet.book2 && newBet.stake2 > 0) {
+                    sportsbooks[newBet.book2].inUse = (sportsbooks[newBet.book2].inUse || 0) + parseFloat(newBet.stake2);
+                }
+            }
+            
+            // Save back to localStorage
+            localStorage.setItem('gnl_sportsbooks', JSON.stringify(sportsbooks));
+        }
+
         // Update bankroll inUse amounts when bet is added/edited
         function updateBankrollInUse() {
             // Load current sportsbooks
@@ -1335,12 +1399,14 @@
                 // Update existing bet
                 const betIndex = bets.findIndex(b => b.id === window.editingBetId);
                 if (betIndex !== -1) {
+                    const oldBet = bets[betIndex];
+                    
                     // Keep existing proofs if no new ones uploaded
-                    const existingProofs = bets[betIndex].proofs || [];
+                    const existingProofs = oldBet.proofs || [];
                     const finalProofs = proofs.length > 0 ? proofs : existingProofs;
 
                     bets[betIndex] = {
-                        ...bets[betIndex],
+                        ...oldBet,
                         event,
                         book1,
                         book2,
@@ -1357,7 +1423,10 @@
                     };
 
                     saveBets();
-                    updateBankrollInUse();
+                    
+                    // Update bankroll balances (reverse old stakes, apply new stakes)
+                    updateBankrollForBetEdit(oldBet, bets[betIndex]);
+                    
                     updateStats();
                     renderBets();
                     closeAddModal();
@@ -1366,7 +1435,7 @@
                     delete window.editingBetId;
                     delete window.isEditMode;
 
-                    alert('✅ Bet updated!');
+                    alert('✅ Bet updated! Bankroll balances adjusted.');
                 }
             } else {
                 // Create new bet
@@ -1389,7 +1458,12 @@
 
                 bets.unshift(newBet);
                 saveBets();
-                updateBankrollInUse();
+                
+                // Update bankroll balances if bet has stakes
+                if (stake1 > 0 || stake2 > 0) {
+                    updateBankrollForNewBet(newBet);
+                }
+                
                 updateStats();
                 renderBets();
                 closeAddModal();

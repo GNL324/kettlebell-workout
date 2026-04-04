@@ -297,6 +297,107 @@
             margin-left: 15px;
         }
 
+        /* Pending Bets List */
+        .pending-bets-list {
+            display: grid;
+            gap: 15px;
+        }
+
+        .pending-bet-card {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 15px;
+            border: 1px solid rgba(255, 165, 2, 0.3);
+        }
+
+        .pending-bet-card .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .pending-bet-card .event {
+            font-size: 16px;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .pending-bet-card .status {
+            background: linear-gradient(135deg, #ffa502, #ff7f50);
+            color: #000;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .pending-bet-card .details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .pending-bet-card .detail-item {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+
+        .pending-bet-card .detail-item .label {
+            color: #888;
+            font-size: 11px;
+            margin-bottom: 2px;
+        }
+
+        .pending-bet-card .detail-item .value {
+            color: #fff;
+            font-weight: 500;
+        }
+
+        .pending-bet-card .actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .pending-bet-card .actions button {
+            flex: 1;
+            max-width: 150px;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .pending-bet-card .btn-won {
+            background: linear-gradient(135deg, #00ff88, #00d9ff);
+            color: #000;
+        }
+
+        .pending-bet-card .btn-won:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.4);
+        }
+
+        .pending-bet-card .btn-lost {
+            background: linear-gradient(135deg, #ff4757, #ff6b81);
+            color: #fff;
+        }
+
+        .pending-bet-card .btn-lost:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(255, 71, 87, 0.4);
+        }
+
         .transaction-item .actions button {
             padding: 6px 12px;
             border: none;
@@ -417,6 +518,14 @@
         <div class="section">
             <h2>📊 Sportsbook Balances</h2>
             <div class="sportsbook-grid" id="sportsbooksGrid"></div>
+        </div>
+
+        <!-- Pending Bets -->
+        <div class="section">
+            <h2>⏳ Pending Bets (In Use)</h2>
+            <div class="pending-bets-list" id="pendingBetsList">
+                <p style="color: #888; text-align: center; padding: 20px;">Loading pending bets...</p>
+            </div>
         </div>
 
         <!-- Recent Transactions -->
@@ -1206,11 +1315,125 @@
             alert('✅ All data has been reset to $0');
         }
 
+        // Render pending bets
+        function renderPendingBets() {
+            const bets = JSON.parse(localStorage.getItem('gnl_bets')) || [];
+            const pendingBets = bets.filter(b => b.status === 'pending');
+            const list = document.getElementById('pendingBetsList');
+
+            if (pendingBets.length === 0) {
+                list.innerHTML = '<p style="color: #888; text-align: center; padding: 20px;">✅ No pending bets - all funds available!</p>';
+                return;
+            }
+
+            list.innerHTML = pendingBets.map(bet => `
+                <div class="pending-bet-card">
+                    <div class="header">
+                        <div class="event">${bet.event || 'Unnamed Bet'}</div>
+                        <div class="status">⏳ Pending</div>
+                    </div>
+                    <div class="details">
+                        <div class="detail-item">
+                            <div class="label">Side A</div>
+                            <div class="value">${bet.book1 || 'N/A'}: ${formatCurrency(bet.stake1 || 0)}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="label">Side B</div>
+                            <div class="value">${bet.book2 || 'N/A'}: ${formatCurrency(bet.stake2 || 0)}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="label">Profit</div>
+                            <div class="value" style="color: #00ff88;">+${formatCurrency(bet.profit || 0)}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="label">Date</div>
+                            <div class="value">${formatDate(bet.date || new Date())}</div>
+                        </div>
+                    </div>
+                    <div class="actions">
+                        <button class="btn-won" onclick="settleBetFromTracker(${bet.id}, 'won')">✅ Mark Won</button>
+                        <button class="btn-lost" onclick="settleBetFromTracker(${bet.id}, 'lost')">❌ Mark Lost</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Settle bet from bankroll tracker
+        function settleBetFromTracker(betId, result) {
+            const bets = JSON.parse(localStorage.getItem('gnl_bets')) || [];
+            const betIndex = bets.findIndex(b => b.id === betId);
+            
+            if (betIndex === -1) {
+                alert('Bet not found!');
+                return;
+            }
+
+            const bet = bets[betIndex];
+            const winningBook = result === 'won' ? bet.book1 : bet.book2;
+            const losingBook = result === 'won' ? bet.book2 : bet.book1;
+
+            if (!confirm(`Settle bet: ${bet.event || 'Unnamed'}\n\n${winningBook} WON (+${formatCurrency(bet.profit || 0)})\n${losingBook} LOST\n\nThis will update your bankroll balances.`)) {
+                return;
+            }
+
+            // Update bet status
+            bets[betIndex].status = winningBook;
+            localStorage.setItem('gnl_bets', JSON.stringify(bets));
+
+            // Update bankroll balances
+            const sportsbooks = JSON.parse(localStorage.getItem('gnl_sportsbooks')) || {};
+
+            // Initialize if needed
+            if (!sportsbooks[bet.book1]) sportsbooks[bet.book1] = { balance: 0, inUse: 0 };
+            if (!sportsbooks[bet.book2]) sportsbooks[bet.book2] = { balance: 0, inUse: 0 };
+
+            // Release inUse funds
+            sportsbooks[bet.book1].inUse = Math.max(0, (sportsbooks[bet.book1].inUse || 0) - (bet.stake1 || 0));
+            sportsbooks[bet.book2].inUse = Math.max(0, (sportsbooks[bet.book2].inUse || 0) - (bet.stake2 || 0));
+
+            // Calculate and add payout to winning book
+            const winningStake = result === 'won' ? bet.stake1 : bet.stake2;
+            const winningOddsStr = (result === 'won' ? bet.odds1 : bet.odds2 || '').replace('+', '');
+            const winningOdds = parseFloat(winningOddsStr) || 0;
+
+            let payout = 0;
+            if (winningOdds > 0) {
+                payout = winningStake * (1 + winningOdds / 100);
+            } else if (winningOdds < 0) {
+                payout = winningStake * (1 + 100 / Math.abs(winningOdds));
+            } else {
+                // Fallback: use stake + profit
+                payout = (winningStake || 0) + (bet.profit || 0);
+            }
+
+            sportsbooks[winningBook].balance = (sportsbooks[winningBook].balance || 0) + payout;
+
+            // Add transaction record
+            transactions.unshift({
+                type: result === 'won' ? 'win' : 'loss',
+                sportsbook: winningBook,
+                amount: result === 'won' ? payout : -(bet.stake2 || 0),
+                date: new Date().toISOString(),
+                notes: `Bet settled: ${bet.event || 'Unnamed'} - ${winningBook} ${result === 'won' ? 'WON' : 'LOST'}`
+            });
+
+            // Save and update UI
+            localStorage.setItem('gnl_sportsbooks', JSON.stringify(sportsbooks));
+            saveTransactions();
+            updateDashboard();
+            renderSportsbooks();
+            renderTransactions();
+            renderPendingBets();
+
+            alert(`✅ Bet settled!\n\n${winningBook} ${result === 'won' ? 'WON +$' + (payout - (winningStake || 0)).toFixed(2) : 'LOST'}\n\nBankroll updated!`);
+        }
+
         // Initialize
         loadActiveBets();
         updateDashboard();
         renderSportsbooks();
         renderTransactions();
+        renderPendingBets();
     </script>
 </body>
 </html>

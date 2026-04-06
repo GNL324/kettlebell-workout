@@ -14,6 +14,14 @@ interface Exercise {
 
 interface RoutineExercise extends Exercise {
   restSeconds: number;
+  timeSeconds: number;
+}
+
+function formatDuration(totalSeconds: number): string {
+  const mins = Math.floor(totalSeconds / 60);
+  const secs = totalSeconds % 60;
+  if (secs === 0) return `${mins}m`;
+  return `${mins}m ${secs}s`;
 }
 
 type Tab = 'cardio' | 'strength' | 'routine';
@@ -65,7 +73,7 @@ export default function Home() {
   const [isRunning, setIsRunning] = useState(false);
 
   const addToRoutine = (exercise: Exercise) => {
-    setRoutine([...routine, { ...exercise, restSeconds: 60 }]);
+    setRoutine([...routine, { ...exercise, restSeconds: 60, timeSeconds: 0 }]);
   };
 
   const removeFromRoutine = (index: number) => {
@@ -85,6 +93,19 @@ export default function Home() {
     newRoutine[index].restSeconds = seconds;
     setRoutine(newRoutine);
   };
+
+  const updateTime = (index: number, seconds: number) => {
+    const newRoutine = [...routine];
+    newRoutine[index].timeSeconds = seconds;
+    setRoutine(newRoutine);
+  };
+
+  // Calculate workout duration (only for timed exercises)
+  const workoutDuration = routine.reduce((total, ex) => {
+    const exerciseTime = ex.timeSeconds > 0 ? ex.timeSeconds : 0;
+    const restTime = ex.restSeconds;
+    return total + exerciseTime + restTime;
+  }, 0);
 
   const startWorkout = () => {
     if (routine.length === 0) return;
@@ -271,10 +292,20 @@ export default function Home() {
     <div className="min-h-screen bg-white text-neutral-900">
       <header className="border-b border-neutral-200">
         <div className="max-w-5xl mx-auto px-6 py-6">
-          <h1 className="text-2xl font-semibold tracking-tight">Kettlebell</h1>
-          <p className="text-sm text-neutral-500 mt-1">
-            {routine.length > 0 ? `${routine.length} exercises in routine` : 'Select exercises to build a routine'}
-          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-semibold tracking-tight">Kettlebell</h1>
+              <p className="text-sm text-neutral-500 mt-1">
+                {routine.length > 0 ? `${routine.length} exercises • ${formatDuration(workoutDuration)}` : 'Select exercises to build a routine'}
+              </p>
+            </div>
+            {routine.length > 0 && (
+              <div className="text-right">
+                <p className="text-2xl font-semibold">{formatDuration(workoutDuration)}</p>
+                <p className="text-xs text-neutral-500">Total Time</p>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
@@ -306,6 +337,19 @@ export default function Home() {
               </div>
             ) : (
               <>
+                <div className="bg-neutral-50 rounded-lg p-4 mb-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-neutral-500">Estimated Duration</p>
+                      <p className="text-2xl font-semibold">{formatDuration(workoutDuration)}</p>
+                    </div>
+                    <div className="text-right text-sm text-neutral-500">
+                      <p>{routine.length} exercises</p>
+                      <p>{routine.filter(e => e.timeSeconds > 0).length} timed</p>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="space-y-2 mb-8">
                   {routine.map((exercise, index) => (
                     <div
@@ -362,22 +406,43 @@ export default function Home() {
                         <p className="text-xs text-neutral-500 truncate">{exercise.reps}</p>
                       </div>
 
-                      <div className="flex items-center gap-1">
-                        <span className="text-xs text-neutral-500">Rest:</span>
-                        <select
-                          value={exercise.restSeconds}
-                          onChange={(e) => updateRestTime(index, parseInt(e.target.value))}
-                          className="px-2 py-1 border border-neutral-300 rounded text-sm"
-                        >
-                          <option value={0}>0s</option>
-                          <option value={15}>15s</option>
-                          <option value={30}>30s</option>
-                          <option value={45}>45s</option>
-                          <option value={60}>60s</option>
-                          <option value={90}>90s</option>
-                          <option value={120}>2m</option>
-                          <option value={180}>3m</option>
-                        </select>
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1">
+                          <span className="text-xs text-neutral-500">Time:</span>
+                          <select
+                            value={exercise.timeSeconds}
+                            onChange={(e) => updateTime(index, parseInt(e.target.value))}
+                            className="px-2 py-1 border border-neutral-300 rounded text-sm"
+                          >
+                            <option value={0}>Reps</option>
+                            <option value={15}>15s</option>
+                            <option value={30}>30s</option>
+                            <option value={45}>45s</option>
+                            <option value={60}>60s</option>
+                            <option value={90}>90s</option>
+                            <option value={120}>2m</option>
+                            <option value={180}>3m</option>
+                            <option value={300}>5m</option>
+                          </select>
+                        </div>
+
+                        <div className="flex items-center gap-1">
+                          <span className="text-xs text-neutral-500">Rest:</span>
+                          <select
+                            value={exercise.restSeconds}
+                            onChange={(e) => updateRestTime(index, parseInt(e.target.value))}
+                            className="px-2 py-1 border border-neutral-300 rounded text-sm"
+                          >
+                            <option value={0}>0s</option>
+                            <option value={15}>15s</option>
+                            <option value={30}>30s</option>
+                            <option value={45}>45s</option>
+                            <option value={60}>60s</option>
+                            <option value={90}>90s</option>
+                            <option value={120}>2m</option>
+                            <option value={180}>3m</option>
+                          </select>
+                        </div>
                       </div>
 
                       <button
@@ -394,7 +459,7 @@ export default function Home() {
                   onClick={startWorkout}
                   className="w-full py-4 bg-neutral-900 text-white rounded-lg font-medium text-lg hover:bg-neutral-800"
                 >
-                  Start Workout
+                  Start Workout ({formatDuration(workoutDuration)})
                 </button>
               </>
             )}

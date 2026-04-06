@@ -214,17 +214,17 @@ export default function Home() {
               
               {currentExercise.timeSeconds > 0 ? (
                 <>
-                  <div className="text-6xl font-light tabular-nums text-center my-6">{formatTime(timeLeft)}</div>
-                  <div className="flex gap-3 justify-center mb-6">
+                  <div className="text-8xl md:text-9xl font-light tabular-nums text-center my-8">{formatTime(timeLeft)}</div>
+                  <div className="flex gap-4 justify-center mb-8">
                     <button
                       onClick={() => setIsRunning(!isRunning)}
-                      className="px-6 py-3 bg-neutral-900 text-white rounded-lg font-medium"
+                      className="px-8 py-4 bg-neutral-900 text-white rounded-lg font-medium text-lg"
                     >
                       {isRunning ? 'Pause' : 'Start'}
                     </button>
                     <button
                       onClick={() => { setTimeLeft(currentExercise.timeSeconds); setIsRunning(false); }}
-                      className="px-6 py-3 border border-neutral-300 rounded-lg font-medium"
+                      className="px-8 py-4 border border-neutral-300 rounded-lg font-medium text-lg"
                     >
                       Reset
                     </button>
@@ -256,7 +256,7 @@ export default function Home() {
           ) : (
             <div className="text-center py-8">
               <p className="text-sm text-neutral-500 uppercase tracking-wide mb-4">Rest</p>
-              <div className="text-7xl font-light tabular-nums mb-8">{formatTime(timeLeft)}</div>
+              <div className="text-8xl md:text-9xl font-light tabular-nums mb-8">{formatTime(timeLeft)}</div>
               
               {currentExerciseIndex < routine.length - 1 && (
                 <div className="mb-8">
@@ -279,16 +279,16 @@ export default function Home() {
                 </div>
               )}
               
-              <div className="flex gap-3 justify-center">
+              <div className="flex gap-4 justify-center">
                 <button
                   onClick={() => setIsRunning(!isRunning)}
-                  className="px-6 py-3 bg-neutral-900 text-white rounded-lg font-medium"
+                  className="px-8 py-4 bg-neutral-900 text-white rounded-lg font-medium text-lg"
                 >
                   {isRunning ? 'Pause' : 'Resume'}
                 </button>
                 <button
                   onClick={finishRest}
-                  className="px-6 py-3 border border-neutral-300 rounded-lg font-medium"
+                  className="px-8 py-4 border border-neutral-300 rounded-lg font-medium text-lg"
                 >
                   Skip Rest
                 </button>

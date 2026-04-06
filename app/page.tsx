@@ -78,11 +78,13 @@ export default function Home() {
   const timeLeftRef = useRef(timeLeft);
   const isRunningRef = useRef(isRunning);
   const currentIndexRef = useRef(currentExerciseIndex);
+  const routineRef = useRef(routine);
   
   useEffect(() => { phaseRef.current = phase; }, [phase]);
   useEffect(() => { timeLeftRef.current = timeLeft; }, [timeLeft]);
   useEffect(() => { isRunningRef.current = isRunning; }, [isRunning]);
   useEffect(() => { currentIndexRef.current = currentExerciseIndex; }, [currentExerciseIndex]);
+  useEffect(() => { routineRef.current = routine; }, [routine]);
 
   const addToRoutine = (exercise: Exercise) => {
     setRoutine([...routine, { ...exercise, restSeconds: 60 }]);
@@ -159,29 +161,30 @@ export default function Home() {
     nextExercise();
   };
 
-  // Timer effect
+  // Timer effect - uses refs to avoid dependency loops
   useEffect(() => {
     if (!isRunning || timeLeft > 0) return;
     
+    const currentRoutine = routineRef.current;
+    const currentIdx = currentIndexRef.current;
+    
     if (phase === 'countdown') {
       setPhase('exercise');
-      setTimeLeft(routine[currentExerciseIndex].defaultTime);
+      setTimeLeft(currentRoutine[currentIdx].defaultTime);
       setIsRunning(true);
     } else if (phase === 'rest') {
-      // finishRest() inline
-      if (currentExerciseIndex < routine.length - 1) {
-        setCurrentExerciseIndex(currentExerciseIndex + 1);
+      if (currentIdx < currentRoutine.length - 1) {
+        setCurrentExerciseIndex(currentIdx + 1);
         setPhase('countdown');
         setTimeLeft(5);
         setIsRunning(true);
       }
     } else if (phase === 'exercise') {
-      // startRest() inline
       setPhase('rest');
-      setTimeLeft(routine[currentExerciseIndex].restSeconds);
+      setTimeLeft(currentRoutine[currentIdx].restSeconds);
       setIsRunning(true);
     }
-  }, [isRunning, timeLeft, phase, currentExerciseIndex, routine]);
+  }, [isRunning, timeLeft, phase]);
 
   useEffect(() => {
     if (!isRunning || timeLeft <= 0) return;
@@ -201,11 +204,11 @@ export default function Home() {
           setTimeLeft(0);
         } else if (currentPhase === 'exercise') {
           setPhase('rest');
-          setTimeLeft(routine[currentIndexRef.current].restSeconds);
+          setTimeLeft(routineRef.current[currentIndexRef.current].restSeconds);
           setIsRunning(true);
         } else if (currentPhase === 'rest') {
           // nextExercise inline
-          if (currentIndexRef.current < routine.length - 1) {
+          if (currentIndexRef.current < routineRef.current.length - 1) {
             setCurrentExerciseIndex(currentIndexRef.current + 1);
             setPhase('countdown');
             setTimeLeft(5);
@@ -225,7 +228,7 @@ export default function Home() {
     
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [view, routine]);
+  }, [view]);
 
   const formatTime = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
 

@@ -199,9 +199,31 @@ export default function Home() {
               </div>
             </>
           ) : (
-            <div className="text-center py-12">
+            <div className="text-center py-8">
               <p className="text-sm text-neutral-500 uppercase tracking-wide mb-4">Rest</p>
               <div className="text-7xl font-light tabular-nums mb-8">{formatTime(timeLeft)}</div>
+              
+              {currentExerciseIndex < routine.length - 1 && (
+                <div className="mb-8">
+                  <p className="text-sm text-neutral-400 mb-3">Up Next</p>
+                  <div className="aspect-video bg-neutral-100 rounded-xl overflow-hidden max-w-md mx-auto">
+                    {(() => {
+                      const nextEx = routine[currentExerciseIndex + 1];
+                      return nextEx.image.endsWith('.gif') ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={nextEx.image} alt={nextEx.name} className="w-full h-full object-contain" />
+                      ) : (
+                        <Image src={nextEx.image} alt={nextEx.name} width={400} height={300} className="w-full h-full object-contain" />
+                      );
+                    })()}
+                  </div>
+                  <div className="mt-4">
+                    <p className="text-lg font-medium">{routine[currentExerciseIndex + 1].name}</p>
+                    <p className="text-neutral-500">{routine[currentExerciseIndex + 1].reps}</p>
+                  </div>
+                </div>
+              )}
+              
               <div className="flex gap-3 justify-center">
                 <button
                   onClick={() => setIsRunning(!isRunning)}
@@ -216,9 +238,9 @@ export default function Home() {
                   Skip Rest
                 </button>
               </div>
-              <p className="mt-6 text-neutral-500">
-                Next: {currentExerciseIndex < routine.length - 1 ? routine[currentExerciseIndex + 1].name : 'Finish'}
-              </p>
+              {currentExerciseIndex >= routine.length - 1 && (
+                <p className="mt-6 text-neutral-500">Last exercise — finish strong!</p>
+              )}
             </div>
           )}
         </div>

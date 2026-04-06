@@ -15,13 +15,17 @@ interface Exercise {
 const exercises: Exercise[] = [
   // Cardio exercises
   { id: 'kb-swing', name: 'KB Swing', image: '/kb-swing.jpg', reps: '15-20 reps @ 25lb', cue: 'Hips back, explosive drive', category: 'cardio' },
+  { id: 'kb-american-swing', name: 'American Swing', image: '/kb-american-swing.jpg', reps: '12-15 reps @ 25lb', cue: 'Swing overhead, full extension', category: 'cardio' },
   { id: 'jump-rope', name: 'Jump Rope', image: '/jump-rope.gif', reps: '2 minutes', cue: 'Light on feet, consistent rhythm', category: 'cardio' },
   { id: 'kb-goblet-squat', name: 'Goblet Squat', image: '/kb-goblet-squat.jpg', reps: '12-15 reps @ 35lb', cue: 'Chest up, depth below parallel', category: 'cardio' },
   { id: 'kb-clean-press', name: 'Clean & Press', image: '/kb-clean-press.jpg', reps: '8-10 reps @ 25lb each', cue: 'Explosive clean, strict press', category: 'cardio' },
   { id: 'kb-snatch', name: 'KB Snatch', image: '/kb-snatch.jpg', reps: '8-10 reps @ 25lb each', cue: 'High pull, punch through', category: 'cardio' },
   { id: 'kb-thrusters', name: 'Thrusters', image: '/kb-thrusters.gif', reps: '10-12 reps @ 25lb each', cue: 'Squat then press in one motion', category: 'cardio' },
   { id: 'kb-halo', name: 'KB Halo', image: '/kb-halo.gif', reps: '30 seconds each direction @ 15lb', cue: 'Circle around head, tight core', category: 'cardio' },
-  { id: 'burpees', name: 'Burpee Over KB', image: '/kb-burpee-over.jpg', reps: '8-10 reps', cue: 'Jump over kettlebell', category: 'cardio' },
+  { id: 'kb-burpee-over', name: 'Burpee Over KB', image: '/kb-burpee-over.jpg', reps: '8-10 reps', cue: 'Jump over kettlebell', category: 'cardio' },
+  { id: 'kb-swing-clean', name: 'Swing to Clean', image: '/kb-swing-clean.jpg', reps: '10-12 reps @ 25lb', cue: 'Swing into rack position', category: 'cardio' },
+  { id: 'kb-sumo-high-pull', name: 'Sumo High Pull', image: '/kb-sumo-high-pull.jpg', reps: '12-15 reps @ 25lb', cue: 'Wide stance, pull to chin', category: 'cardio' },
+  { id: 'kb-pistol-squat', name: 'Pistol Squat', image: '/kb-pistol-squat.gif', reps: '5-8 reps @ 15lb', cue: 'Single leg, counterbalance with bell', category: 'cardio' },
   // Strength exercises
   { id: 'kb-deadlift', name: 'KB Deadlift', image: '/kb-deadlift.jpg', reps: '10-12 reps @ 35lb+', cue: 'Hinge at hips, flat back', category: 'strength' },
   { id: 'kb-front-squat', name: 'Front Squat', image: '/kb-front-squat.jpg', reps: '10-12 reps @ 25lb each', cue: 'Elbows up, upright torso', category: 'strength' },
@@ -31,6 +35,13 @@ const exercises: Exercise[] = [
   { id: 'kb-farmers-walk', name: "Farmer's Walk", image: '/kb-farmers-walk.gif', reps: '40-60 yards @ 35lb each', cue: 'Shoulders back, grip tight', category: 'strength' },
   { id: 'kb-overhead-carry', name: 'Overhead Carry', image: '/kb-overhead-carry.jpg', reps: '30-40 yards @ 15-25lb', cue: 'Arm locked out, stable shoulder', category: 'strength' },
   { id: 'kb-windmill', name: 'Windmill', image: '/kb-windmill.jpg', reps: '5-8 reps @ 15-25lb', cue: 'Hinge with straight legs, eye on bell', category: 'strength' },
+  { id: 'kb-z-press', name: 'Z-Press', image: '/kb-z-press.jpg', reps: '8-10 reps @ 25lb each', cue: 'Seated, strict overhead press', category: 'strength' },
+  { id: 'kb-gorilla-row', name: 'Gorilla Row', image: '/kb-gorilla-row.jpg', reps: '10-12 reps @ 25lb each', cue: 'Wide stance, alternating rows', category: 'strength' },
+  { id: 'kb-chainsaw-row', name: 'Chainsaw Row', image: '/kb-chainsaw-row.jpg', reps: '8-10 reps @ 35lb', cue: 'Meadow row position, explosive', category: 'strength' },
+  { id: 'kb-half-kneeling-press', name: 'Half-Kneeling Press', image: '/kb-half-kneeling-press.jpg', reps: '8-10 reps @ 25lb each', cue: 'Core tight, press from stable base', category: 'strength' },
+  { id: 'kb-kneeling-clean-windmill', name: 'Kneeling Clean to Windmill', image: '/kb-kneeling-clean-windmill.jpg', reps: '5-8 reps @ 15-25lb', cue: 'Clean then windmill in one motion', category: 'strength' },
+  { id: 'kb-plank-pass-through', name: 'Plank Pass-Through', image: '/kb-plank-pass-through.jpg', reps: '10-12 reps @ 15lb', cue: 'Keep hips stable, drag bell under', category: 'strength' },
+  { id: 'kb-reverse-crunch', name: 'Reverse Crunch', image: '/kb-reverse-crunch.jpg', reps: '12-15 reps @ 15lb', cue: 'Bell on chest, crunch knees to chest', category: 'strength' },
 ];
 
 const programs = [
@@ -116,8 +127,8 @@ export default function Home() {
                   : 'bg-[#002b55] text-white hover:bg-[#00c6ff] hover:-translate-y-0.5'
                 }`}
             >
-              {type === 'cardio' && 'Cardio (8)'}
-              {type === 'strength' && 'Strength (10)'}
+              {type === 'cardio' && 'Cardio (12)'}
+              {type === 'strength' && 'Strength (15)'}
               {type === 'programs' && 'Programs'}
             </button>
           ))}

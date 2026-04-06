@@ -14,6 +14,7 @@ interface Exercise {
 
 interface RoutineExercise extends Exercise {
   restSeconds: number;
+  timeSeconds: number;
 }
 
 type Tab = 'cardio' | 'strength' | 'routine';
@@ -65,7 +66,7 @@ export default function Home() {
   const [isRunning, setIsRunning] = useState(false);
 
   const addToRoutine = (exercise: Exercise) => {
-    setRoutine([...routine, { ...exercise, restSeconds: 60 }]);
+    setRoutine([...routine, { ...exercise, restSeconds: 60, timeSeconds: 0 }]);
   };
 
   const removeFromRoutine = (index: number) => {
@@ -86,29 +87,37 @@ export default function Home() {
     setRoutine(newRoutine);
   };
 
+  const updateTime = (index: number, seconds: number) => {
+    const newRoutine = [...routine];
+    newRoutine[index].timeSeconds = seconds;
+    setRoutine(newRoutine);
+  };
+
   const startWorkout = () => {
     if (routine.length === 0) return;
     setCurrentExerciseIndex(0);
     setPhase('exercise');
-    setTimeLeft(0);
+    setTimeLeft(routine[0].timeSeconds);
     setIsRunning(false);
     setView('player');
   };
 
   const nextExercise = () => {
     if (currentExerciseIndex < routine.length - 1) {
-      setCurrentExerciseIndex(prev => prev + 1);
+      const nextIndex = currentExerciseIndex + 1;
+      setCurrentExerciseIndex(nextIndex);
       setPhase('exercise');
-      setTimeLeft(0);
+      setTimeLeft(routine[nextIndex].timeSeconds);
       setIsRunning(false);
     }
   };
 
   const prevExercise = () => {
     if (currentExerciseIndex > 0) {
-      setCurrentExerciseIndex(prev => prev - 1);
+      const prevIndex = currentExerciseIndex - 1;
+      setCurrentExerciseIndex(prevIndex);
       setPhase('exercise');
-      setTimeLeft(0);
+      setTimeLeft(routine[prevIndex].timeSeconds);
       setIsRunning(false);
     }
   };
@@ -125,15 +134,20 @@ export default function Home() {
 
   // Timer effect
   useEffect(() => {
-    if (!isRunning || timeLeft <= 0) {
-      if (isRunning && timeLeft <= 0 && phase === 'rest') {
-        finishRest();
-      }
-      return;
+    if (!isRunning || timeLeft > 0) return;
+    
+    if (phase === 'rest') {
+      finishRest();
+    } else if (phase === 'exercise' && routine[currentExerciseIndex]?.timeSeconds > 0) {
+      startRest();
     }
+  }, [isRunning, timeLeft, phase, currentExerciseIndex]);
+
+  useEffect(() => {
+    if (!isRunning || timeLeft <= 0) return;
     const timer = setInterval(() => setTimeLeft(t => t - 1), 1000);
     return () => clearInterval(timer);
-  }, [isRunning, timeLeft, phase]);
+  }, [isRunning, timeLeft]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -197,8 +211,31 @@ export default function Home() {
               </div>
 
               <h2 className="text-3xl font-semibold mb-2">{currentExercise.name}</h2>
-              <p className="text-lg text-neutral-600 mb-2">{currentExercise.reps}</p>
-              <p className="text-neutral-500 mb-8">{currentExercise.cue}</p>
+              
+              {currentExercise.timeSeconds > 0 ? (
+                <>
+                  <div className="text-6xl font-light tabular-nums text-center my-6">{formatTime(timeLeft)}</div>
+                  <div className="flex gap-3 justify-center mb-6">
+                    <button
+                      onClick={() => setIsRunning(!isRunning)}
+                      className="px-6 py-3 bg-neutral-900 text-white rounded-lg font-medium"
+                    >
+                      {isRunning ? 'Pause' : 'Start'}
+                    </button>
+                    <button
+                      onClick={() => { setTimeLeft(currentExercise.timeSeconds); setIsRunning(false); }}
+                      className="px-6 py-3 border border-neutral-300 rounded-lg font-medium"
+                    >
+                      Reset
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <p className="text-lg text-neutral-600 mb-2">{currentExercise.reps}</p>
+                  <p className="text-neutral-500 mb-8">{currentExercise.cue}</p>
+                </>
+              )}
 
               <div className="flex gap-3">
                 <button
@@ -212,7 +249,7 @@ export default function Home() {
                   onClick={startRest}
                   className="flex-1 py-3 bg-neutral-900 text-white rounded-lg font-medium"
                 >
-                  Done → Rest
+                  {currentExercise.timeSeconds > 0 ? 'Done → Rest' : 'Done → Rest'}
                 </button>
               </div>
             </>
@@ -362,22 +399,43 @@ export default function Home() {
                         <p className="text-xs text-neutral-500 truncate">{exercise.reps}</p>
                       </div>
 
-                      <div className="flex items-center gap-1">
-                        <span className="text-xs text-neutral-500">Rest:</span>
-                        <select
-                          value={exercise.restSeconds}
-                          onChange={(e) => updateRestTime(index, parseInt(e.target.value))}
-                          className="px-2 py-1 border border-neutral-300 rounded text-sm"
-                        >
-                          <option value={0}>0s</option>
-                          <option value={15}>15s</option>
-                          <option value={30}>30s</option>
-                          <option value={45}>45s</option>
-                          <option value={60}>60s</option>
-                          <option value={90}>90s</option>
-                          <option value={120}>2m</option>
-                          <option value={180}>3m</option>
-                        </select>
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1">
+                          <span className="text-xs text-neutral-500">Time:</span>
+                          <select
+                            value={exercise.timeSeconds}
+                            onChange={(e) => updateTime(index, parseInt(e.target.value))}
+                            className="px-2 py-1 border border-neutral-300 rounded text-sm"
+                          >
+                            <option value={0}>Reps</option>
+                            <option value={15}>15s</option>
+                            <option value={30}>30s</option>
+                            <option value={45}>45s</option>
+                            <option value={60}>60s</option>
+                            <option value={90}>90s</option>
+                            <option value={120}>2m</option>
+                            <option value={180}>3m</option>
+                            <option value={300}>5m</option>
+                          </select>
+                        </div>
+
+                        <div className="flex items-center gap-1">
+                          <span className="text-xs text-neutral-500">Rest:</span>
+                          <select
+                            value={exercise.restSeconds}
+                            onChange={(e) => updateRestTime(index, parseInt(e.target.value))}
+                            className="px-2 py-1 border border-neutral-300 rounded text-sm"
+                          >
+                            <option value={0}>0s</option>
+                            <option value={15}>15s</option>
+                            <option value={30}>30s</option>
+                            <option value={45}>45s</option>
+                            <option value={60}>60s</option>
+                            <option value={90}>90s</option>
+                            <option value={120}>2m</option>
+                            <option value={180}>3m</option>
+                          </select>
+                        </div>
                       </div>
 
                       <button

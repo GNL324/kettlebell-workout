@@ -135,6 +135,28 @@ export default function Home() {
     return () => clearInterval(timer);
   }, [isRunning, timeLeft, phase]);
 
+  // Keyboard shortcuts
+  useEffect(() => {
+    if (view !== 'player') return;
+    
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.code === 'Space') {
+        e.preventDefault();
+        if (phase === 'exercise') {
+          startRest();
+        } else if (phase === 'rest') {
+          finishRest();
+        }
+      } else if (e.code === 'ArrowLeft') {
+        e.preventDefault();
+        prevExercise();
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [view, phase, currentExerciseIndex]);
+
   const formatTime = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
 
   const filteredExercises = exercises.filter(e => e.category === activeTab);

@@ -61,9 +61,9 @@ export default function Home() {
   
   // Player state
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
-  const [phase, setPhase] = useState<'exercise' | 'rest'>('exercise');
-  const [timeLeft, setTimeLeft] = useState(0);
-  const [isRunning, setIsRunning] = useState(false);
+  const [phase, setPhase] = useState<'countdown' | 'exercise' | 'rest'>('countdown');
+  const [timeLeft, setTimeLeft] = useState(5);
+  const [isRunning, setIsRunning] = useState(true);
 
   const addToRoutine = (exercise: Exercise) => {
     setRoutine([...routine, { ...exercise, restSeconds: 60, timeSeconds: 0 }]);
@@ -96,9 +96,9 @@ export default function Home() {
   const startWorkout = () => {
     if (routine.length === 0) return;
     setCurrentExerciseIndex(0);
-    setPhase('exercise');
-    setTimeLeft(routine[0].timeSeconds);
-    setIsRunning(false);
+    setPhase('countdown');
+    setTimeLeft(5);
+    setIsRunning(true);
     setView('player');
   };
 
@@ -106,9 +106,9 @@ export default function Home() {
     if (currentExerciseIndex < routine.length - 1) {
       const nextIndex = currentExerciseIndex + 1;
       setCurrentExerciseIndex(nextIndex);
-      setPhase('exercise');
-      setTimeLeft(routine[nextIndex].timeSeconds);
-      setIsRunning(false);
+      setPhase('countdown');
+      setTimeLeft(5);
+      setIsRunning(true);
     }
   };
 
@@ -116,9 +116,9 @@ export default function Home() {
     if (currentExerciseIndex > 0) {
       const prevIndex = currentExerciseIndex - 1;
       setCurrentExerciseIndex(prevIndex);
-      setPhase('exercise');
-      setTimeLeft(routine[prevIndex].timeSeconds);
-      setIsRunning(false);
+      setPhase('countdown');
+      setTimeLeft(5);
+      setIsRunning(true);
     }
   };
 
@@ -136,7 +136,11 @@ export default function Home() {
   useEffect(() => {
     if (!isRunning || timeLeft > 0) return;
     
-    if (phase === 'rest') {
+    if (phase === 'countdown') {
+      setPhase('exercise');
+      setTimeLeft(routine[currentExerciseIndex].timeSeconds);
+      setIsRunning(routine[currentExerciseIndex].timeSeconds > 0);
+    } else if (phase === 'rest') {
       finishRest();
     } else if (phase === 'exercise' && routine[currentExerciseIndex]?.timeSeconds > 0) {
       startRest();
@@ -156,7 +160,9 @@ export default function Home() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.code === 'Space') {
         e.preventDefault();
-        if (phase === 'exercise') {
+        if (phase === 'countdown') {
+          setTimeLeft(0);
+        } else if (phase === 'exercise') {
           startRest();
         } else if (phase === 'rest') {
           finishRest();
@@ -199,7 +205,13 @@ export default function Home() {
             </div>
           </div>
 
-          {phase === 'exercise' ? (
+          {phase === 'countdown' ? (
+            <div className="text-center py-20">
+              <p className="text-sm text-neutral-500 uppercase tracking-wide mb-8">Get Ready</p>
+              <div className="text-9xl md:text-[12rem] font-bold tabular-nums">{timeLeft}</div>
+              <p className="text-lg text-neutral-400 mt-8">{currentExercise.name}</p>
+            </div>
+          ) : phase === 'exercise' ? (
             <>
               <div className="aspect-video bg-neutral-100 rounded-xl overflow-hidden mb-6">
                 {currentExercise.image.endsWith('.gif') ? (

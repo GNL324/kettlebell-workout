@@ -1,58 +1,36 @@
-# 🏋️ Kettlebell Workout App
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-A complete kettlebell exercise library with workout timer and exercise demonstrations.
+## Getting Started
 
-## 🚀 Live Demo
+First, run the development server:
 
-https://gnl324.github.io/kettlebell-workout/
-
-## 📋 Features
-
-- ✅ 28 kettlebell exercises from Men's Health
-- ✅ Jump rope training integration
-- ✅ Built-in workout timer
-- ✅ Exercise demonstration library
-- ✅ Multiple workout types
-
-## 📁 File Structure
-
-```
-kettlebell-workout/
-├── index.html              # Main workout app
-├── exercises/              # Exercise demonstration files
-│   ├── kb-swing.jpg
-│   ├── kb-goblet-squat.jpg
-│   ├── kb-clean-press.jpg
-│   ├── kb-snatch.jpg
-│   ├── kb-turkish-getup.gif
-│   └── ... (28 exercises total)
-└── README.md
+```bash
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
 ```
 
-## 🏋️ Equipment Needed
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-- 2× 15lb kettlebells
-- 2× 25lb kettlebells
-- 1× 35lb kettlebell
-- Jump rope
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-## 🎯 Exercise Categories
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-- Swings
-- Squats
-- Presses
-- Cleans
-- Snatches
-- Carries
-- Core work
+## Learn More
 
-## 🛠️ Development
+To learn more about Next.js, take a look at the following resources:
 
-1. Clone the repo
-2. Open `index.html` in browser
-3. Make changes
-4. Commit and push to deploy
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
----
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-**Built for kettlebell training and workout tracking.**
+## Deploy on Vercel
+
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.

@@ -1,15 +1,15 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 
 interface Exercise {
   id: string;
   name: string;
   image: string;
+  reps: string;
   cue: string;
   category: 'cardio' | 'strength';
-  defaultTime: number;
 }
 
 interface RoutineExercise extends Exercise {
@@ -20,43 +20,34 @@ type Tab = 'cardio' | 'strength' | 'routine';
 type View = 'builder' | 'player';
 
 const exercises: Exercise[] = [
-  // Cardio - shorter bursts
-  { id: 'kb-swing', name: 'Swing', image: 'kb-swing.jpg', cue: 'Hips back, explosive drive', category: 'cardio', defaultTime: 45 },
-  { id: 'kb-american-swing', name: 'American Swing', image: 'kb-american-swing.jpg', cue: 'Swing overhead, full extension', category: 'cardio', defaultTime: 45 },
-  { id: 'jump-rope', name: 'Jump Rope', image: 'jump-rope.gif', cue: 'Light on feet, consistent rhythm', category: 'cardio', defaultTime: 90 },
-  { id: 'kb-goblet-squat', name: 'Goblet Squat', image: 'kb-goblet-squat.jpg', cue: 'Chest up, depth below parallel', category: 'cardio', defaultTime: 60 },
-  { id: 'kb-clean-press', name: 'Clean & Press', image: 'kb-clean-press.jpg', cue: 'Explosive clean, strict press', category: 'cardio', defaultTime: 60 },
-  { id: 'kb-snatch', name: 'Snatch', image: 'kb-snatch.jpg', cue: 'High pull, punch through', category: 'cardio', defaultTime: 60 },
-  { id: 'kb-thrusters', name: 'Thrusters', image: 'kb-thrusters.gif', cue: 'Squat then press in one motion', category: 'cardio', defaultTime: 45 },
-  { id: 'kb-halo', name: 'Halo', image: 'kb-halo.gif', cue: 'Circle around head, tight core', category: 'cardio', defaultTime: 30 },
-  { id: 'kb-burpee-over', name: 'Burpee Over', image: 'kb-burpee-over.jpg', cue: 'Jump over kettlebell', category: 'cardio', defaultTime: 45 },
-  { id: 'kb-swing-clean', name: 'Swing to Clean', image: 'kb-swing-clean.jpg', cue: 'Swing into rack position', category: 'cardio', defaultTime: 60 },
-  { id: 'kb-sumo-high-pull', name: 'Sumo High Pull', image: 'kb-sumo-high-pull.jpg', cue: 'Wide stance, pull to chin', category: 'cardio', defaultTime: 45 },
-  { id: 'kb-pistol-squat', name: 'Pistol Squat', image: 'kb-pistol-squat.gif', cue: 'Single leg, counterbalance', category: 'cardio', defaultTime: 60 },
-  // Strength - longer sets
-  { id: 'kb-deadlift', name: 'Deadlift', image: 'kb-deadlift.jpg', cue: 'Hinge at hips, flat back', category: 'strength', defaultTime: 60 },
-  { id: 'kb-front-squat', name: 'Front Squat', image: 'kb-front-squat.jpg', cue: 'Elbows up, upright torso', category: 'strength', defaultTime: 60 },
-  { id: 'kb-floor-press', name: 'Floor Press', image: 'kb-floor-press.gif', cue: 'Press from floor, control descent', category: 'strength', defaultTime: 60 },
-  { id: 'kb-renegade-row', name: 'Renegade Row', image: 'kb-renegade-row.jpg', cue: 'Plank position, row without rotation', category: 'strength', defaultTime: 60 },
-  { id: 'kb-turkish-getup', name: 'Turkish Get-Up', image: 'kb-turkish-getup.gif', cue: 'Slow and controlled, eye on bell', category: 'strength', defaultTime: 120 },
-  { id: 'kb-farmers-walk', name: "Farmer's Walk", image: 'kb-farmers-walk.gif', cue: 'Shoulders back, grip tight', category: 'strength', defaultTime: 90 },
-  { id: 'kb-overhead-carry', name: 'Overhead Carry', image: 'kb-overhead-carry.jpg', cue: 'Arm locked out, stable shoulder', category: 'strength', defaultTime: 60 },
-  { id: 'kb-windmill', name: 'Windmill', image: 'kb-windmill.jpg', cue: 'Hinge with straight legs, eye on bell', category: 'strength', defaultTime: 60 },
-  { id: 'kb-z-press', name: 'Z-Press', image: 'kb-z-press.jpg', cue: 'Seated, strict overhead press', category: 'strength', defaultTime: 60 },
-  { id: 'kb-gorilla-row', name: 'Gorilla Row', image: 'kb-gorilla-row.jpg', cue: 'Wide stance, alternating rows', category: 'strength', defaultTime: 60 },
-  { id: 'kb-chainsaw-row', name: 'Chainsaw Row', image: 'kb-chainsaw-row.jpg', cue: 'Meadow row position, explosive', category: 'strength', defaultTime: 45 },
-  { id: 'kb-half-kneeling-press', name: 'Half-Kneeling Press', image: 'kb-half-kneeling-press.jpg', cue: 'Core tight, press from stable base', category: 'strength', defaultTime: 60 },
-  { id: 'kb-kneeling-clean-windmill', name: 'Clean to Windmill', image: 'kb-kneeling-clean-windmill.jpg', cue: 'Clean then windmill in one motion', category: 'strength', defaultTime: 90 },
-  { id: 'kb-plank-pass-through', name: 'Plank Pass-Through', image: 'kb-plank-pass-through.jpg', cue: 'Keep hips stable, drag bell under', category: 'strength', defaultTime: 45 },
-  { id: 'kb-reverse-crunch', name: 'Reverse Crunch', image: 'kb-reverse-crunch.jpg', cue: 'Bell on chest, crunch knees to chest', category: 'strength', defaultTime: 60 },
+  { id: 'kb-swing', name: 'Swing', image: 'kb-swing.jpg', reps: '15-20 reps @ 25lb', cue: 'Hips back, explosive drive', category: 'cardio' },
+  { id: 'kb-american-swing', name: 'American Swing', image: 'kb-american-swing.jpg', reps: '12-15 reps @ 25lb', cue: 'Swing overhead, full extension', category: 'cardio' },
+  { id: 'jump-rope', name: 'Jump Rope', image: 'jump-rope.gif', reps: '2 minutes', cue: 'Light on feet, consistent rhythm', category: 'cardio' },
+  { id: 'kb-goblet-squat', name: 'Goblet Squat', image: 'kb-goblet-squat.jpg', reps: '12-15 reps @ 35lb', cue: 'Chest up, depth below parallel', category: 'cardio' },
+  { id: 'kb-clean-press', name: 'Clean & Press', image: 'kb-clean-press.jpg', reps: '8-10 reps @ 25lb each', cue: 'Explosive clean, strict press', category: 'cardio' },
+  { id: 'kb-snatch', name: 'Snatch', image: 'kb-snatch.jpg', reps: '8-10 reps @ 25lb each', cue: 'High pull, punch through', category: 'cardio' },
+  { id: 'kb-thrusters', name: 'Thrusters', image: 'kb-thrusters.gif', reps: '10-12 reps @ 25lb each', cue: 'Squat then press in one motion', category: 'cardio' },
+  { id: 'kb-halo', name: 'Halo', image: 'kb-halo.gif', reps: '30s each direction @ 15lb', cue: 'Circle around head, tight core', category: 'cardio' },
+  { id: 'kb-burpee-over', name: 'Burpee Over', image: 'kb-burpee-over.jpg', reps: '8-10 reps', cue: 'Jump over kettlebell', category: 'cardio' },
+  { id: 'kb-swing-clean', name: 'Swing to Clean', image: 'kb-swing-clean.jpg', reps: '10-12 reps @ 25lb', cue: 'Swing into rack position', category: 'cardio' },
+  { id: 'kb-sumo-high-pull', name: 'Sumo High Pull', image: 'kb-sumo-high-pull.jpg', reps: '12-15 reps @ 25lb', cue: 'Wide stance, pull to chin', category: 'cardio' },
+  { id: 'kb-pistol-squat', name: 'Pistol Squat', image: 'kb-pistol-squat.gif', reps: '5-8 reps @ 15lb', cue: 'Single leg, counterbalance', category: 'cardio' },
+  { id: 'kb-deadlift', name: 'Deadlift', image: 'kb-deadlift.jpg', reps: '10-12 reps @ 35lb+', cue: 'Hinge at hips, flat back', category: 'strength' },
+  { id: 'kb-front-squat', name: 'Front Squat', image: 'kb-front-squat.jpg', reps: '10-12 reps @ 25lb each', cue: 'Elbows up, upright torso', category: 'strength' },
+  { id: 'kb-floor-press', name: 'Floor Press', image: 'kb-floor-press.gif', reps: '10-12 reps @ 25lb each', cue: 'Press from floor, control descent', category: 'strength' },
+  { id: 'kb-renegade-row', name: 'Renegade Row', image: 'kb-renegade-row.jpg', reps: '8-10 reps @ 25lb each', cue: 'Plank position, row without rotation', category: 'strength' },
+  { id: 'kb-turkish-getup', name: 'Turkish Get-Up', image: 'kb-turkish-getup.gif', reps: '3-5 reps @ 15-25lb', cue: 'Slow and controlled, eye on bell', category: 'strength' },
+  { id: 'kb-farmers-walk', name: "Farmer's Walk", image: 'kb-farmers-walk.gif', reps: '40-60 yards @ 35lb each', cue: 'Shoulders back, grip tight', category: 'strength' },
+  { id: 'kb-overhead-carry', name: 'Overhead Carry', image: 'kb-overhead-carry.jpg', reps: '30-40 yards @ 15-25lb', cue: 'Arm locked out, stable shoulder', category: 'strength' },
+  { id: 'kb-windmill', name: 'Windmill', image: 'kb-windmill.jpg', reps: '5-8 reps @ 15-25lb', cue: 'Hinge with straight legs, eye on bell', category: 'strength' },
+  { id: 'kb-z-press', name: 'Z-Press', image: 'kb-z-press.jpg', reps: '8-10 reps @ 25lb each', cue: 'Seated, strict overhead press', category: 'strength' },
+  { id: 'kb-gorilla-row', name: 'Gorilla Row', image: 'kb-gorilla-row.jpg', reps: '10-12 reps @ 25lb each', cue: 'Wide stance, alternating rows', category: 'strength' },
+  { id: 'kb-chainsaw-row', name: 'Chainsaw Row', image: 'kb-chainsaw-row.jpg', reps: '8-10 reps @ 35lb', cue: 'Meadow row position, explosive', category: 'strength' },
+  { id: 'kb-half-kneeling-press', name: 'Half-Kneeling Press', image: 'kb-half-kneeling-press.jpg', reps: '8-10 reps @ 25lb each', cue: 'Core tight, press from stable base', category: 'strength' },
+  { id: 'kb-kneeling-clean-windmill', name: 'Clean to Windmill', image: 'kb-kneeling-clean-windmill.jpg', reps: '5-8 reps @ 15-25lb', cue: 'Clean then windmill in one motion', category: 'strength' },
+  { id: 'kb-plank-pass-through', name: 'Plank Pass-Through', image: 'kb-plank-pass-through.jpg', reps: '10-12 reps @ 15lb', cue: 'Keep hips stable, drag bell under', category: 'strength' },
+  { id: 'kb-reverse-crunch', name: 'Reverse Crunch', image: 'kb-reverse-crunch.jpg', reps: '12-15 reps @ 15lb', cue: 'Bell on chest, crunch knees to chest', category: 'strength' },
 ];
-
-function formatDuration(totalSeconds: number): string {
-  const mins = Math.floor(totalSeconds / 60);
-  const secs = totalSeconds % 60;
-  if (secs === 0) return `${mins}m`;
-  return `${mins}m ${secs}s`;
-}
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<Tab>('cardio');
@@ -69,22 +60,9 @@ export default function Home() {
   
   // Player state
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
-  const [phase, setPhase] = useState<'countdown' | 'exercise' | 'rest'>('countdown');
-  const [timeLeft, setTimeLeft] = useState(5);
-  const [isRunning, setIsRunning] = useState(true);
-  
-  // Refs to avoid dependency issues in effects
-  const phaseRef = useRef(phase);
-  const timeLeftRef = useRef(timeLeft);
-  const isRunningRef = useRef(isRunning);
-  const currentIndexRef = useRef(currentExerciseIndex);
-  const routineRef = useRef(routine);
-  
-  useEffect(() => { phaseRef.current = phase; }, [phase]);
-  useEffect(() => { timeLeftRef.current = timeLeft; }, [timeLeft]);
-  useEffect(() => { isRunningRef.current = isRunning; }, [isRunning]);
-  useEffect(() => { currentIndexRef.current = currentExerciseIndex; }, [currentExerciseIndex]);
-  useEffect(() => { routineRef.current = routine; }, [routine]);
+  const [phase, setPhase] = useState<'exercise' | 'rest'>('exercise');
+  const [timeLeft, setTimeLeft] = useState(0);
+  const [isRunning, setIsRunning] = useState(false);
 
   const addToRoutine = (exercise: Exercise) => {
     setRoutine([...routine, { ...exercise, restSeconds: 60 }]);
@@ -102,52 +80,36 @@ export default function Home() {
     setRoutine(newRoutine);
   };
 
-  const updateTime = (index: number, seconds: number) => {
-    const newRoutine = [...routine];
-    newRoutine[index].defaultTime = seconds;
-    setRoutine(newRoutine);
-  };
-
   const updateRestTime = (index: number, seconds: number) => {
     const newRoutine = [...routine];
     newRoutine[index].restSeconds = seconds;
     setRoutine(newRoutine);
   };
 
-  // Calculate workout duration
-  const workoutDuration = routine.reduce((total, ex, index) => {
-    const countdown = 5;
-    const exercise = ex.defaultTime;
-    const rest = index < routine.length - 1 ? ex.restSeconds : 0;
-    return total + countdown + exercise + rest;
-  }, 0);
-
   const startWorkout = () => {
     if (routine.length === 0) return;
     setCurrentExerciseIndex(0);
-    setPhase('countdown');
-    setTimeLeft(5);
-    setIsRunning(true);
+    setPhase('exercise');
+    setTimeLeft(0);
+    setIsRunning(false);
     setView('player');
   };
 
   const nextExercise = () => {
     if (currentExerciseIndex < routine.length - 1) {
-      const nextIndex = currentExerciseIndex + 1;
-      setCurrentExerciseIndex(nextIndex);
-      setPhase('countdown');
-      setTimeLeft(5);
-      setIsRunning(true);
+      setCurrentExerciseIndex(prev => prev + 1);
+      setPhase('exercise');
+      setTimeLeft(0);
+      setIsRunning(false);
     }
   };
 
   const prevExercise = () => {
     if (currentExerciseIndex > 0) {
-      const prevIndex = currentExerciseIndex - 1;
-      setCurrentExerciseIndex(prevIndex);
-      setPhase('countdown');
-      setTimeLeft(5);
-      setIsRunning(true);
+      setCurrentExerciseIndex(prev => prev - 1);
+      setPhase('exercise');
+      setTimeLeft(0);
+      setIsRunning(false);
     }
   };
 
@@ -161,36 +123,17 @@ export default function Home() {
     nextExercise();
   };
 
-  // Timer effect - uses refs to avoid dependency loops
+  // Timer effect
   useEffect(() => {
-    if (!isRunning || timeLeft > 0) return;
-    
-    const currentRoutine = routineRef.current;
-    const currentIdx = currentIndexRef.current;
-    
-    if (phase === 'countdown') {
-      setPhase('exercise');
-      setTimeLeft(currentRoutine[currentIdx].defaultTime);
-      setIsRunning(true);
-    } else if (phase === 'rest') {
-      if (currentIdx < currentRoutine.length - 1) {
-        setCurrentExerciseIndex(currentIdx + 1);
-        setPhase('countdown');
-        setTimeLeft(5);
-        setIsRunning(true);
+    if (!isRunning || timeLeft <= 0) {
+      if (isRunning && timeLeft <= 0 && phase === 'rest') {
+        finishRest();
       }
-    } else if (phase === 'exercise') {
-      setPhase('rest');
-      setTimeLeft(currentRoutine[currentIdx].restSeconds);
-      setIsRunning(true);
+      return;
     }
-  }, [isRunning, timeLeft, phase]);
-
-  useEffect(() => {
-    if (!isRunning || timeLeft <= 0) return;
     const timer = setInterval(() => setTimeLeft(t => t - 1), 1000);
     return () => clearInterval(timer);
-  }, [isRunning, timeLeft]);
+  }, [isRunning, timeLeft, phase]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -199,36 +142,20 @@ export default function Home() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.code === 'Space') {
         e.preventDefault();
-        const currentPhase = phaseRef.current;
-        if (currentPhase === 'countdown') {
-          setTimeLeft(0);
-        } else if (currentPhase === 'exercise') {
-          setPhase('rest');
-          setTimeLeft(routineRef.current[currentIndexRef.current].restSeconds);
-          setIsRunning(true);
-        } else if (currentPhase === 'rest') {
-          // nextExercise inline
-          if (currentIndexRef.current < routineRef.current.length - 1) {
-            setCurrentExerciseIndex(currentIndexRef.current + 1);
-            setPhase('countdown');
-            setTimeLeft(5);
-            setIsRunning(true);
-          }
+        if (phase === 'exercise') {
+          startRest();
+        } else if (phase === 'rest') {
+          finishRest();
         }
       } else if (e.code === 'ArrowLeft') {
         e.preventDefault();
-        if (currentIndexRef.current > 0) {
-          setCurrentExerciseIndex(currentIndexRef.current - 1);
-          setPhase('countdown');
-          setTimeLeft(5);
-          setIsRunning(true);
-        }
+        prevExercise();
       }
     };
     
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [view]);
+  }, [view, phase, currentExerciseIndex]);
 
   const formatTime = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
 
@@ -258,13 +185,7 @@ export default function Home() {
             </div>
           </div>
 
-          {phase === 'countdown' ? (
-            <div className="text-center py-20">
-              <p className="text-sm text-neutral-500 uppercase tracking-wide mb-8">Get Ready</p>
-              <div className="text-9xl md:text-[12rem] font-bold tabular-nums">{timeLeft}</div>
-              <p className="text-lg text-neutral-400 mt-8">{currentExercise.name}</p>
-            </div>
-          ) : phase === 'exercise' ? (
+          {phase === 'exercise' ? (
             <>
               <div className="aspect-video bg-neutral-100 rounded-xl overflow-hidden mb-6">
                 {currentExercise.image.endsWith('.gif') ? (
@@ -276,25 +197,8 @@ export default function Home() {
               </div>
 
               <h2 className="text-3xl font-semibold mb-2">{currentExercise.name}</h2>
-              
-              <div className="text-8xl md:text-9xl font-light tabular-nums text-center my-8">{formatTime(timeLeft)}</div>
-              
-              <div className="flex gap-4 justify-center mb-8">
-                <button
-                  onClick={() => setIsRunning(!isRunning)}
-                  className="px-8 py-4 bg-neutral-900 text-white rounded-lg font-medium text-lg"
-                >
-                  {isRunning ? 'Pause' : 'Start'}
-                </button>
-                <button
-                  onClick={() => { setTimeLeft(currentExercise.defaultTime); setIsRunning(false); }}
-                  className="px-8 py-4 border border-neutral-300 rounded-lg font-medium text-lg"
-                >
-                  Reset
-                </button>
-              </div>
-
-              <p className="text-neutral-500 text-center mb-6">{currentExercise.cue}</p>
+              <p className="text-lg text-neutral-600 mb-2">{currentExercise.reps}</p>
+              <p className="text-neutral-500 mb-8">{currentExercise.cue}</p>
 
               <div className="flex gap-3">
                 <button
@@ -315,7 +219,7 @@ export default function Home() {
           ) : (
             <div className="text-center py-8">
               <p className="text-sm text-neutral-500 uppercase tracking-wide mb-4">Rest</p>
-              <div className="text-8xl md:text-9xl font-light tabular-nums mb-8">{formatTime(timeLeft)}</div>
+              <div className="text-7xl font-light tabular-nums mb-8">{formatTime(timeLeft)}</div>
               
               {currentExerciseIndex < routine.length - 1 && (
                 <div className="mb-8">
@@ -333,21 +237,21 @@ export default function Home() {
                   </div>
                   <div className="mt-4">
                     <p className="text-lg font-medium">{routine[currentExerciseIndex + 1].name}</p>
-                    <p className="text-neutral-500">{formatTime(routine[currentExerciseIndex + 1].defaultTime)}</p>
+                    <p className="text-neutral-500">{routine[currentExerciseIndex + 1].reps}</p>
                   </div>
                 </div>
               )}
               
-              <div className="flex gap-4 justify-center">
+              <div className="flex gap-3 justify-center">
                 <button
                   onClick={() => setIsRunning(!isRunning)}
-                  className="px-8 py-4 bg-neutral-900 text-white rounded-lg font-medium text-lg"
+                  className="px-6 py-3 bg-neutral-900 text-white rounded-lg font-medium"
                 >
                   {isRunning ? 'Pause' : 'Resume'}
                 </button>
                 <button
                   onClick={finishRest}
-                  className="px-8 py-4 border border-neutral-300 rounded-lg font-medium text-lg"
+                  className="px-6 py-3 border border-neutral-300 rounded-lg font-medium"
                 >
                   Skip Rest
                 </button>
@@ -367,20 +271,10 @@ export default function Home() {
     <div className="min-h-screen bg-white text-neutral-900">
       <header className="border-b border-neutral-200">
         <div className="max-w-5xl mx-auto px-6 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-semibold tracking-tight">Kettlebell</h1>
-              <p className="text-sm text-neutral-500 mt-1">
-                {routine.length > 0 ? `${routine.length} exercises • ${formatDuration(workoutDuration)}` : 'Select exercises to build a routine'}
-              </p>
-            </div>
-            {routine.length > 0 && (
-              <div className="text-right">
-                <p className="text-2xl font-semibold">{formatDuration(workoutDuration)}</p>
-                <p className="text-xs text-neutral-500">Total Time</p>
-              </div>
-            )}
-          </div>
+          <h1 className="text-2xl font-semibold tracking-tight">Kettlebell</h1>
+          <p className="text-sm text-neutral-500 mt-1">
+            {routine.length > 0 ? `${routine.length} exercises in routine` : 'Select exercises to build a routine'}
+          </p>
         </div>
       </header>
 
@@ -412,19 +306,6 @@ export default function Home() {
               </div>
             ) : (
               <>
-                <div className="bg-neutral-50 rounded-lg p-4 mb-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-neutral-500">Estimated Duration</p>
-                      <p className="text-3xl font-semibold">{formatDuration(workoutDuration)}</p>
-                    </div>
-                    <div className="text-right text-sm text-neutral-500">
-                      <p>{routine.length} exercises</p>
-                      <p>5s countdown each</p>
-                    </div>
-                  </div>                
-                </div>
-
                 <div className="space-y-2 mb-8">
                   {routine.map((exercise, index) => (
                     <div
@@ -478,45 +359,25 @@ export default function Home() {
 
                       <div className="flex-1 min-w-0">
                         <h3 className="font-medium text-sm truncate">{exercise.name}</h3>
-                        <p className="text-xs text-neutral-500 truncate">{exercise.cue}</p>
+                        <p className="text-xs text-neutral-500 truncate">{exercise.reps}</p>
                       </div>
 
-                      <div className="flex items-center gap-2">
-                        <div className="flex items-center gap-1">
-                          <span className="text-xs text-neutral-500">Time:</span>
-                          <select
-                            value={exercise.defaultTime}
-                            onChange={(e) => updateTime(index, parseInt(e.target.value))}
-                            className="px-2 py-1 border border-neutral-300 rounded text-sm"
-                          >
-                            <option value={15}>15s</option>
-                            <option value={30}>30s</option>
-                            <option value={45}>45s</option>
-                            <option value={60}>60s</option>
-                            <option value={90}>90s</option>
-                            <option value={120}>2m</option>
-                            <option value={180}>3m</option>
-                            <option value={300}>5m</option>
-                          </select>
-                        </div>
-
-                        <div className="flex items-center gap-1">
-                          <span className="text-xs text-neutral-500">Rest:</span>
-                          <select
-                            value={exercise.restSeconds}
-                            onChange={(e) => updateRestTime(index, parseInt(e.target.value))}
-                            className="px-2 py-1 border border-neutral-300 rounded text-sm"
-                          >
-                            <option value={0}>0s</option>
-                            <option value={15}>15s</option>
-                            <option value={30}>30s</option>
-                            <option value={45}>45s</option>
-                            <option value={60}>60s</option>
-                            <option value={90}>90s</option>
-                            <option value={120}>2m</option>
-                            <option value={180}>3m</option>
-                          </select>
-                        </div>
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs text-neutral-500">Rest:</span>
+                        <select
+                          value={exercise.restSeconds}
+                          onChange={(e) => updateRestTime(index, parseInt(e.target.value))}
+                          className="px-2 py-1 border border-neutral-300 rounded text-sm"
+                        >
+                          <option value={0}>0s</option>
+                          <option value={15}>15s</option>
+                          <option value={30}>30s</option>
+                          <option value={45}>45s</option>
+                          <option value={60}>60s</option>
+                          <option value={90}>90s</option>
+                          <option value={120}>2m</option>
+                          <option value={180}>3m</option>
+                        </select>
                       </div>
 
                       <button
@@ -533,7 +394,7 @@ export default function Home() {
                   onClick={startWorkout}
                   className="w-full py-4 bg-neutral-900 text-white rounded-lg font-medium text-lg hover:bg-neutral-800"
                 >
-                  Start Workout ({formatDuration(workoutDuration)})
+                  Start Workout
                 </button>
               </>
             )}
@@ -552,7 +413,7 @@ export default function Home() {
                   )}
                 </div>
                 <h3 className="font-medium text-sm">{exercise.name}</h3>
-                <p className="text-xs text-neutral-500 mb-2">{formatTime(exercise.defaultTime)}</p>
+                <p className="text-xs text-neutral-500 mb-2">{exercise.reps}</p>
                 <button
                   onClick={() => addToRoutine(exercise)}
                   className="w-full py-2 text-sm rounded-lg font-medium transition-colors bg-neutral-900 text-white hover:bg-neutral-800"

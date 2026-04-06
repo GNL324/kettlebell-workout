@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 
 interface Exercise {
@@ -60,12 +60,8 @@ export default function Home() {
   const [timeLeft, setTimeLeft] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
 
-  const isInRoutine = useCallback((id: string) => routine.some(e => e.id === id), [routine]);
-
   const addToRoutine = (exercise: Exercise) => {
-    if (!isInRoutine(exercise.id)) {
-      setRoutine([...routine, { ...exercise, restSeconds: 60 }]);
-    }
+    setRoutine([...routine, { ...exercise, restSeconds: 60 }]);
   };
 
   const removeFromRoutine = (index: number) => {
@@ -362,39 +358,26 @@ export default function Home() {
         ) : (
           // Exercise Grid
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {filteredExercises.map(exercise => {
-              const inRoutine = isInRoutine(exercise.id);
-              return (
-                <div key={exercise.id} className="group">
-                  <div className="aspect-square bg-neutral-100 rounded-lg overflow-hidden mb-3 relative">
-                    {exercise.image.endsWith('.gif') ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={exercise.image} alt={exercise.name} className="w-full h-full object-cover" />
-                    ) : (
-                      <Image src={exercise.image} alt={exercise.name} width={300} height={300} className="w-full h-full object-cover" />
-                    )}
-                    {inRoutine && (
-                      <div className="absolute top-2 right-2 w-6 h-6 bg-neutral-900 text-white rounded-full flex items-center justify-center text-xs">
-                        ✓
-                      </div>
-                    )}
-                  </div>
-                  <h3 className="font-medium text-sm">{exercise.name}</h3>
-                  <p className="text-xs text-neutral-500 mb-2">{exercise.reps}</p>
-                  <button
-                    onClick={() => addToRoutine(exercise)}
-                    disabled={inRoutine}
-                    className={`w-full py-2 text-sm rounded-lg font-medium transition-colors ${
-                      inRoutine
-                        ? 'bg-neutral-200 text-neutral-500 cursor-default'
-                        : 'bg-neutral-900 text-white hover:bg-neutral-800'
-                    }`}
-                  >
-                    {inRoutine ? 'Added' : 'Add to Routine'}
-                  </button>
+            {filteredExercises.map(exercise => (
+              <div key={exercise.id} className="group">
+                <div className="aspect-square bg-neutral-100 rounded-lg overflow-hidden mb-3">
+                  {exercise.image.endsWith('.gif') ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={exercise.image} alt={exercise.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <Image src={exercise.image} alt={exercise.name} width={300} height={300} className="w-full h-full object-cover" />
+                  )}
                 </div>
-              );
-            })}
+                <h3 className="font-medium text-sm">{exercise.name}</h3>
+                <p className="text-xs text-neutral-500 mb-2">{exercise.reps}</p>
+                <button
+                  onClick={() => addToRoutine(exercise)}
+                  className="w-full py-2 text-sm rounded-lg font-medium transition-colors bg-neutral-900 text-white hover:bg-neutral-800"
+                >
+                  Add to Routine
+                </button>
+              </div>
+            ))}
           </div>
         )}
       </main>

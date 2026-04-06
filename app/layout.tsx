@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Kettlebell Workout - Full Exercise Library",
-  description: "28 kettlebell exercises from Men's Health with workout timer",
+  title: "Kettlebell",
+  description: "Minimalist kettlebell exercise library",
 };
 
 export default function RootLayout({

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 
 interface Exercise {
@@ -13,21 +13,21 @@ interface Exercise {
 }
 
 const exercises: Exercise[] = [
-  // Cardio exercises
-  { id: 'kb-swing', name: 'KB Swing', image: '/kb-swing.jpg', reps: '15-20 reps @ 25lb', cue: 'Hips back, explosive drive', category: 'cardio' },
+  // Cardio
+  { id: 'kb-swing', name: 'Swing', image: '/kb-swing.jpg', reps: '15-20 reps @ 25lb', cue: 'Hips back, explosive drive', category: 'cardio' },
   { id: 'kb-american-swing', name: 'American Swing', image: '/kb-american-swing.jpg', reps: '12-15 reps @ 25lb', cue: 'Swing overhead, full extension', category: 'cardio' },
   { id: 'jump-rope', name: 'Jump Rope', image: '/jump-rope.gif', reps: '2 minutes', cue: 'Light on feet, consistent rhythm', category: 'cardio' },
   { id: 'kb-goblet-squat', name: 'Goblet Squat', image: '/kb-goblet-squat.jpg', reps: '12-15 reps @ 35lb', cue: 'Chest up, depth below parallel', category: 'cardio' },
   { id: 'kb-clean-press', name: 'Clean & Press', image: '/kb-clean-press.jpg', reps: '8-10 reps @ 25lb each', cue: 'Explosive clean, strict press', category: 'cardio' },
-  { id: 'kb-snatch', name: 'KB Snatch', image: '/kb-snatch.jpg', reps: '8-10 reps @ 25lb each', cue: 'High pull, punch through', category: 'cardio' },
+  { id: 'kb-snatch', name: 'Snatch', image: '/kb-snatch.jpg', reps: '8-10 reps @ 25lb each', cue: 'High pull, punch through', category: 'cardio' },
   { id: 'kb-thrusters', name: 'Thrusters', image: '/kb-thrusters.gif', reps: '10-12 reps @ 25lb each', cue: 'Squat then press in one motion', category: 'cardio' },
-  { id: 'kb-halo', name: 'KB Halo', image: '/kb-halo.gif', reps: '30 seconds each direction @ 15lb', cue: 'Circle around head, tight core', category: 'cardio' },
-  { id: 'kb-burpee-over', name: 'Burpee Over KB', image: '/kb-burpee-over.jpg', reps: '8-10 reps', cue: 'Jump over kettlebell', category: 'cardio' },
+  { id: 'kb-halo', name: 'Halo', image: '/kb-halo.gif', reps: '30s each direction @ 15lb', cue: 'Circle around head, tight core', category: 'cardio' },
+  { id: 'kb-burpee-over', name: 'Burpee Over', image: '/kb-burpee-over.jpg', reps: '8-10 reps', cue: 'Jump over kettlebell', category: 'cardio' },
   { id: 'kb-swing-clean', name: 'Swing to Clean', image: '/kb-swing-clean.jpg', reps: '10-12 reps @ 25lb', cue: 'Swing into rack position', category: 'cardio' },
   { id: 'kb-sumo-high-pull', name: 'Sumo High Pull', image: '/kb-sumo-high-pull.jpg', reps: '12-15 reps @ 25lb', cue: 'Wide stance, pull to chin', category: 'cardio' },
-  { id: 'kb-pistol-squat', name: 'Pistol Squat', image: '/kb-pistol-squat.gif', reps: '5-8 reps @ 15lb', cue: 'Single leg, counterbalance with bell', category: 'cardio' },
-  // Strength exercises
-  { id: 'kb-deadlift', name: 'KB Deadlift', image: '/kb-deadlift.jpg', reps: '10-12 reps @ 35lb+', cue: 'Hinge at hips, flat back', category: 'strength' },
+  { id: 'kb-pistol-squat', name: 'Pistol Squat', image: '/kb-pistol-squat.gif', reps: '5-8 reps @ 15lb', cue: 'Single leg, counterbalance', category: 'cardio' },
+  // Strength
+  { id: 'kb-deadlift', name: 'Deadlift', image: '/kb-deadlift.jpg', reps: '10-12 reps @ 35lb+', cue: 'Hinge at hips, flat back', category: 'strength' },
   { id: 'kb-front-squat', name: 'Front Squat', image: '/kb-front-squat.jpg', reps: '10-12 reps @ 25lb each', cue: 'Elbows up, upright torso', category: 'strength' },
   { id: 'kb-floor-press', name: 'Floor Press', image: '/kb-floor-press.gif', reps: '10-12 reps @ 25lb each', cue: 'Press from floor, control descent', category: 'strength' },
   { id: 'kb-renegade-row', name: 'Renegade Row', image: '/kb-renegade-row.jpg', reps: '8-10 reps @ 25lb each', cue: 'Plank position, row without rotation', category: 'strength' },
@@ -39,226 +39,171 @@ const exercises: Exercise[] = [
   { id: 'kb-gorilla-row', name: 'Gorilla Row', image: '/kb-gorilla-row.jpg', reps: '10-12 reps @ 25lb each', cue: 'Wide stance, alternating rows', category: 'strength' },
   { id: 'kb-chainsaw-row', name: 'Chainsaw Row', image: '/kb-chainsaw-row.jpg', reps: '8-10 reps @ 35lb', cue: 'Meadow row position, explosive', category: 'strength' },
   { id: 'kb-half-kneeling-press', name: 'Half-Kneeling Press', image: '/kb-half-kneeling-press.jpg', reps: '8-10 reps @ 25lb each', cue: 'Core tight, press from stable base', category: 'strength' },
-  { id: 'kb-kneeling-clean-windmill', name: 'Kneeling Clean to Windmill', image: '/kb-kneeling-clean-windmill.jpg', reps: '5-8 reps @ 15-25lb', cue: 'Clean then windmill in one motion', category: 'strength' },
+  { id: 'kb-kneeling-clean-windmill', name: 'Clean to Windmill', image: '/kb-kneeling-clean-windmill.jpg', reps: '5-8 reps @ 15-25lb', cue: 'Clean then windmill in one motion', category: 'strength' },
   { id: 'kb-plank-pass-through', name: 'Plank Pass-Through', image: '/kb-plank-pass-through.jpg', reps: '10-12 reps @ 15lb', cue: 'Keep hips stable, drag bell under', category: 'strength' },
   { id: 'kb-reverse-crunch', name: 'Reverse Crunch', image: '/kb-reverse-crunch.jpg', reps: '12-15 reps @ 15lb', cue: 'Bell on chest, crunch knees to chest', category: 'strength' },
 ];
 
-const programs = [
-  { name: 'Full 35-Min', desc: 'Complete workout (warmup + 2 circuits + finisher)' },
-  { name: 'Cardio 20-Min', desc: 'High-intensity fat burner' },
-  { name: 'Strength 25-Min', desc: 'Heavy compound movements' },
-  { name: 'Beginner Plan', desc: "Men's Health recommended starter program" },
-  { name: 'Ladder Finisher', desc: 'Descending rep challenge' },
-];
-
-type WorkoutType = 'cardio' | 'strength' | 'programs';
+type WorkoutType = 'cardio' | 'strength';
 
 export default function Home() {
-  const [activeWorkout, setActiveWorkout] = useState<WorkoutType>('cardio');
-  const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
+  const [activeTab, setActiveTab] = useState<WorkoutType>('cardio');
+  const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
   const [timeLeft, setTimeLeft] = useState(120);
-  const [isTimerRunning, setIsTimerRunning] = useState(false);
+  const [isRunning, setIsRunning] = useState(false);
 
-  const filteredExercises = exercises.filter(e => e.category === activeWorkout);
-  const currentExercise = activeWorkout === 'programs' 
-    ? null 
-    : filteredExercises[currentExerciseIndex] || filteredExercises[0];
+  const filteredExercises = exercises.filter(e => e.category === activeTab);
 
   useEffect(() => {
-    setCurrentExerciseIndex(0);
-  }, [activeWorkout]);
+    if (!isRunning || timeLeft <= 0) return;
+    const timer = setInterval(() => setTimeLeft(t => t - 1), 1000);
+    return () => clearInterval(timer);
+  }, [isRunning, timeLeft]);
 
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (isTimerRunning && timeLeft > 0) {
-      interval = setInterval(() => {
-        setTimeLeft(prev => prev - 1);
-      }, 1000);
-    } else if (timeLeft === 0) {
-      setIsTimerRunning(false);
-    }
-    return () => clearInterval(interval);
-  }, [isTimerRunning, timeLeft]);
+  const formatTime = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
 
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  const handleStartTimer = () => {
-    setIsTimerRunning(!isTimerRunning);
-  };
-
-  const handlePrevExercise = () => {
-    setCurrentExerciseIndex(prev => Math.max(0, prev - 1));
-  };
-
-  const handleNextExercise = () => {
-    setCurrentExerciseIndex(prev => Math.min(filteredExercises.length - 1, prev + 1));
-  };
-
-  const handleExerciseSelect = (index: number) => {
-    setCurrentExerciseIndex(index);
+  const resetTimer = () => {
+    setIsRunning(false);
+    setTimeLeft(120);
   };
 
   return (
-    <div className="min-h-screen bg-[#1a1a2e] text-[#e0e0ff] p-5">
-      <div className="max-w-3xl mx-auto">
-        {/* Header */}
-        <header className="text-center py-5">
-          <h1 className="text-4xl mb-2 text-[#00c6ff] font-bold">🏋️ Kettlebell Exercise Library</h1>
-          <p className="text-[#e0e0ff]/80 mb-5">28 exercises from Men&apos;s Health + Jump Rope training</p>
-          <div className="bg-[#0d3b66] rounded-xl p-4 my-4">
-            <strong>Equipment:</strong> 2×15lb, 2×25lb, 1×35lb kettlebells | Jump rope
-          </div>
-        </header>
+    <div className="min-h-screen bg-white text-neutral-900">
+      {/* Header */}
+      <header className="border-b border-neutral-200">
+        <div className="max-w-5xl mx-auto px-6 py-6">
+          <h1 className="text-2xl font-semibold tracking-tight">Kettlebell</h1>
+          <p className="text-sm text-neutral-500 mt-1">27 exercises</p>
+        </div>
+      </header>
 
-        {/* Workout Type Tabs */}
-        <div className="flex gap-2.5 my-6 flex-wrap">
-          {(['cardio', 'strength', 'programs'] as WorkoutType[]).map((type) => (
+      <main className="max-w-5xl mx-auto px-6 py-8">
+        {/* Tabs */}
+        <div className="flex gap-1 mb-8">
+          {(['cardio', 'strength'] as WorkoutType[]).map(tab => (
             <button
-              key={type}
-              onClick={() => setActiveWorkout(type)}
-              className={`flex-1 min-w-[140px] py-3 px-4 rounded-lg font-bold transition-all text-sm
-                ${activeWorkout === type 
-                  ? 'bg-[#00c6ff] text-white' 
-                  : 'bg-[#002b55] text-white hover:bg-[#00c6ff] hover:-translate-y-0.5'
-                }`}
+              key={tab}
+              onClick={() => { setActiveTab(tab); setSelectedExercise(null); }}
+              className={`px-4 py-2 text-sm font-medium rounded-full transition-colors ${
+                activeTab === tab 
+                  ? 'bg-neutral-900 text-white' 
+                  : 'text-neutral-600 hover:text-neutral-900'
+              }`}
             >
-              {type === 'cardio' && 'Cardio (12)'}
-              {type === 'strength' && 'Strength (15)'}
-              {type === 'programs' && 'Programs'}
+              {tab === 'cardio' ? 'Cardio' : 'Strength'}
             </button>
           ))}
         </div>
 
-        {/* Exercise Demo */}
-        {activeWorkout !== 'programs' && currentExercise && (
-          <div className="my-6">
-            <div className="w-full h-56 bg-[#0d3b66] rounded-xl overflow-hidden relative flex items-center justify-center">
-              {currentExercise.image.endsWith('.gif') ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img 
-                  src={currentExercise.image} 
-                  alt={currentExercise.name}
-                  className="max-w-full max-h-full object-contain"
-                />
-              ) : (
-                <Image 
-                  src={currentExercise.image}
-                  alt={currentExercise.name}
-                  fill
-                  className="object-contain"
-                />
-              )}
-            </div>
-            <div className="text-center text-xl text-[#00c6ff] font-bold mt-4">{currentExercise.name}</div>
-            <div className="text-center text-[#e0e0ff]/80 mt-1">{currentExercise.reps}</div>
-            <div className="text-center text-[#00c6ff]/90 mt-2 text-sm italic">{currentExercise.cue}</div>
+        {/* Selected Exercise View */}
+        {selectedExercise ? (
+          <div className="mb-8">
+            <button 
+              onClick={() => setSelectedExercise(null)}
+              className="text-sm text-neutral-500 hover:text-neutral-900 mb-4"
+            >
+              ← Back to exercises
+            </button>
             
-            {/* Navigation */}
-            <div className="flex items-center justify-center gap-5 mt-4">
-              <button 
-                onClick={handlePrevExercise}
-                disabled={currentExerciseIndex === 0}
-                className="w-11 h-11 rounded-full bg-[#002b55] text-[#00c6ff] border-2 border-[#00c6ff] 
-                  flex items-center justify-center text-lg transition-all hover:bg-[#00c6ff] hover:text-[#002b55] hover:scale-110
-                  disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100"
-                aria-label="Previous exercise"
-              >
-                ←
-              </button>
-              <span className="text-[#e0e0ff]/70">
-                {currentExerciseIndex + 1} / {filteredExercises.length}
-              </span>
-              <button 
-                onClick={handleNextExercise}
-                disabled={currentExerciseIndex === filteredExercises.length - 1}
-                className="w-11 h-11 rounded-full bg-[#002b55] text-[#00c6ff] border-2 border-[#00c6ff] 
-                  flex items-center justify-center text-lg transition-all hover:bg-[#00c6ff] hover:text-[#002b55] hover:scale-110
-                  disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100"
-                aria-label="Next exercise"
-              >
-                →
-              </button>
-            </div>
-          </div>
-        )}
+            <div className="grid md:grid-cols-2 gap-8">
+              {/* Image */}
+              <div className="aspect-video bg-neutral-100 rounded-lg overflow-hidden">
+                {selectedExercise.image.endsWith('.gif') ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img 
+                    src={selectedExercise.image} 
+                    alt={selectedExercise.name}
+                    className="w-full h-full object-contain"
+                  />
+                ) : (
+                  <Image 
+                    src={selectedExercise.image}
+                    alt={selectedExercise.name}
+                    width={600}
+                    height={400}
+                    className="w-full h-full object-contain"
+                  />
+                )}
+              </div>
 
-        {/* Programs View */}
-        {activeWorkout === 'programs' && (
-          <div className="my-6 bg-[#0d2b4a] rounded-lg p-5">
-            <h3 className="text-lg font-bold mb-4 text-[#00c6ff]">🏆 Programs Available</h3>
-            <div className="space-y-3">
-              {programs.map((program) => (
-                <div key={program.name} className="border-l-4 border-[#00c6ff] pl-4 py-2">
-                  <strong>{program.name}:</strong> {program.desc}
+              {/* Details */}
+              <div className="flex flex-col justify-center">
+                <h2 className="text-3xl font-semibold mb-2">{selectedExercise.name}</h2>
+                <p className="text-lg text-neutral-600 mb-6">{selectedExercise.reps}</p>
+                
+                <div className="bg-neutral-50 rounded-lg p-4 mb-6">
+                  <p className="text-sm text-neutral-500 uppercase tracking-wide mb-1">Cue</p>
+                  <p className="text-neutral-700">{selectedExercise.cue}</p>
                 </div>
-              ))}
-            </div>
-          </div>
-        )}
 
-        {/* Timer */}
-        <div className="text-6xl text-center my-5 text-[#00c6ff] font-bold">
-          {formatTime(timeLeft)}
-        </div>
-
-        {/* Instructions */}
-        <div className="bg-[#0d2b4a] rounded-lg p-4 my-4 leading-relaxed">
-          {activeWorkout === 'cardio' && (
-            <>
-              <p className="font-bold mb-2">🔥 Cardio Circuit Exercises:</p>
-              <p className="mb-4">High-intensity movements combining kettlebells and jump rope for fat burning and conditioning.</p>
-            </>
-          )}
-          {activeWorkout === 'strength' && (
-            <>
-              <p className="font-bold mb-2">💪 Strength Training:</p>
-              <p className="mb-4">Heavy compound movements for building muscle and power.</p>
-            </>
-          )}
-          <p><strong>💡 Form Tips:</strong> Hips back on swings, explosive hip drive. Keep core tight on all movements. Control the descent on squats and RDLs.</p>
-        </div>
-
-        {/* Start Button */}
-        <button 
-          onClick={handleStartTimer}
-          className="w-full bg-[#00c6ff] text-white border-none py-4 rounded-full text-lg font-bold cursor-pointer mt-5 
-            transition-colors hover:bg-[#00a0e0]"
-        >
-          {isTimerRunning ? 'PAUSE TIMER' : 'START TIMER'}
-        </button>
-
-        {/* Exercise Library Grid */}
-        {activeWorkout !== 'programs' && (
-          <div className="bg-[#0d2b4a] rounded-lg p-4 mt-5">
-            <p className="mb-4"><strong>📚 Exercise Library:</strong> Click any exercise to view it</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 mt-5">
-              {filteredExercises.map((exercise, index) => (
-                <div
-                  key={exercise.id}
-                  onClick={() => handleExerciseSelect(index)}
-                  className={`p-3 rounded-lg cursor-pointer transition-all hover:-translate-y-0.5
-                    ${currentExerciseIndex === index 
-                      ? 'bg-[#00c6ff]' 
-                      : 'bg-[#0d3b66] hover:bg-[#00c6ff]'
-                    }`}
-                >
-                  <h4 className={`text-sm font-bold mb-1 ${currentExerciseIndex === index ? 'text-[#002b55]' : 'text-[#00c6ff]'}`}>
-                    {exercise.name}
-                  </h4>
-                  <p className={`text-xs ${currentExerciseIndex === index ? 'text-[#002b55]/80' : 'text-[#e0e0ff]/80'}`}>
-                    {exercise.reps}
-                  </p>
+                {/* Timer */}
+                <div className="border-t border-neutral-200 pt-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="text-4xl font-light tabular-nums">{formatTime(timeLeft)}</span>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setIsRunning(!isRunning)}
+                        className="px-4 py-2 bg-neutral-900 text-white text-sm font-medium rounded-lg hover:bg-neutral-800"
+                      >
+                        {isRunning ? 'Pause' : 'Start'}
+                      </button>
+                      <button
+                        onClick={resetTimer}
+                        className="px-4 py-2 border border-neutral-300 text-sm font-medium rounded-lg hover:border-neutral-900"
+                      >
+                        Reset
+                      </button>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    {[30, 60, 90, 120, 180].map(sec => (
+                      <button
+                        key={sec}
+                        onClick={() => { setTimeLeft(sec); setIsRunning(false); }}
+                        className="px-3 py-1 text-xs text-neutral-600 border border-neutral-200 rounded hover:border-neutral-400"
+                      >
+                        {sec}s
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              ))}
+              </div>
             </div>
           </div>
+        ) : (
+          /* Exercise Grid */
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {filteredExercises.map(exercise => (
+              <button
+                key={exercise.id}
+                onClick={() => setSelectedExercise(exercise)}
+                className="group text-left"
+              >
+                <div className="aspect-square bg-neutral-100 rounded-lg overflow-hidden mb-3 group-hover:bg-neutral-200 transition-colors">
+                  {exercise.image.endsWith('.gif') ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img 
+                      src={exercise.image} 
+                      alt={exercise.name}
+                      className="w-full h-full object-cover opacity-90 group-hover:opacity-100"
+                    />
+                  ) : (
+                    <Image 
+                      src={exercise.image}
+                      alt={exercise.name}
+                      width={300}
+                      height={300}
+                      className="w-full h-full object-cover opacity-90 group-hover:opacity-100"
+                    />
+                  )}
+                </div>
+                <h3 className="font-medium text-sm">{exercise.name}</h3>
+                <p className="text-xs text-neutral-500">{exercise.reps}</p>
+              </button>
+            ))}
+          </div>
         )}
-      </div>
+      </main>
     </div>
   );
 }

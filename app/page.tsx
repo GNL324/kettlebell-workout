@@ -54,6 +54,10 @@ export default function Home() {
   const [routine, setRoutine] = useState<RoutineExercise[]>([]);
   const [view, setView] = useState<View>('builder');
   
+  // Drag and drop state
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  
   // Player state
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
   const [phase, setPhase] = useState<'exercise' | 'rest'>('exercise');
@@ -68,16 +72,12 @@ export default function Home() {
     setRoutine(routine.filter((_, i) => i !== index));
   };
 
-  const moveExercise = (index: number, direction: 'up' | 'down') => {
-    if (direction === 'up' && index > 0) {
-      const newRoutine = [...routine];
-      [newRoutine[index], newRoutine[index - 1]] = [newRoutine[index - 1], newRoutine[index]];
-      setRoutine(newRoutine);
-    } else if (direction === 'down' && index < routine.length - 1) {
-      const newRoutine = [...routine];
-      [newRoutine[index], newRoutine[index + 1]] = [newRoutine[index + 1], newRoutine[index]];
-      setRoutine(newRoutine);
-    }
+  const moveExercise = (fromIndex: number, toIndex: number) => {
+    if (toIndex < 0 || toIndex >= routine.length) return;
+    const newRoutine = [...routine];
+    const [moved] = newRoutine.splice(fromIndex, 1);
+    newRoutine.splice(toIndex, 0, moved);
+    setRoutine(newRoutine);
   };
 
   const updateRestTime = (index: number, seconds: number) => {
@@ -306,48 +306,70 @@ export default function Home() {
               </div>
             ) : (
               <>
-                <div className="space-y-3 mb-8">
+                <div className="space-y-2 mb-8">
                   {routine.map((exercise, index) => (
-                    <div key={`${exercise.id}-${index}`} className="flex items-center gap-4 p-4 bg-neutral-50 rounded-lg">
-                      <div className="flex flex-col gap-1">
+                    <div
+                      key={`${exercise.id}-${index}`}
+                      draggable
+                      onDragStart={() => setDraggedIndex(index)}
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        setDragOverIndex(index);
+                      }}
+                      onDragLeave={() => setDragOverIndex(null)}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        if (draggedIndex !== null && draggedIndex !== index) {
+                          moveExercise(draggedIndex, index);
+                        }
+                        setDraggedIndex(null);
+                        setDragOverIndex(null);
+                      }}
+                      className={`flex items-center gap-3 p-3 bg-neutral-50 rounded-lg cursor-grab active:cursor-grabbing transition-all ${
+                        dragOverIndex === index && dragOverIndex !== draggedIndex 
+                          ? 'bg-neutral-200 ring-2 ring-neutral-400' 
+                          : ''
+                      } ${draggedIndex === index ? 'opacity-50' : ''}`}
+                    >
+                      <div className="flex flex-col">
                         <button
-                          onClick={() => moveExercise(index, 'up')}
+                          onClick={() => moveExercise(index, index - 1)}
                           disabled={index === 0}
-                          className="w-8 h-8 flex items-center justify-center rounded hover:bg-neutral-200 disabled:opacity-30"
+                          className="w-7 h-7 flex items-center justify-center rounded hover:bg-neutral-200 disabled:opacity-30"
                         >
                           ↑
                         </button>
                         <button
-                          onClick={() => moveExercise(index, 'down')}
+                          onClick={() => moveExercise(index, index + 1)}
                           disabled={index === routine.length - 1}
-                          className="w-8 h-8 flex items-center justify-center rounded hover:bg-neutral-200 disabled:opacity-30"
+                          className="w-7 h-7 flex items-center justify-center rounded hover:bg-neutral-200 disabled:opacity-30"
                         >
                           ↓
                         </button>
                       </div>
 
-                      <div className="w-16 h-16 bg-neutral-200 rounded-lg overflow-hidden flex-shrink-0">
+                      <div className="w-12 h-12 bg-neutral-200 rounded-lg overflow-hidden flex-shrink-0">
                         {exercise.image.endsWith('.gif') ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img src={exercise.image} alt={exercise.name} className="w-full h-full object-cover" />
                         ) : (
-                          <Image src={exercise.image} alt={exercise.name} width={64} height={64} className="w-full h-full object-cover" />
+                          <Image src={exercise.image} alt={exercise.name} width={48} height={48} className="w-full h-full object-cover" />
                         )}
                       </div>
 
-                      <div className="flex-1">
-                        <h3 className="font-medium">{exercise.name}</h3>
-                        <p className="text-sm text-neutral-500">{exercise.reps}</p>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-medium text-sm truncate">{exercise.name}</h3>
+                        <p className="text-xs text-neutral-500 truncate">{exercise.reps}</p>
                       </div>
 
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm text-neutral-500">Rest:</span>
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs text-neutral-500">Rest:</span>
                         <select
                           value={exercise.restSeconds}
                           onChange={(e) => updateRestTime(index, parseInt(e.target.value))}
-                          className="px-3 py-2 border border-neutral-300 rounded-lg text-sm"
+                          className="px-2 py-1 border border-neutral-300 rounded text-sm"
                         >
-                          <option value={0}>None</option>
+                          <option value={0}>0s</option>
                           <option value={15}>15s</option>
                           <option value={30}>30s</option>
                           <option value={45}>45s</option>
@@ -360,9 +382,9 @@ export default function Home() {
 
                       <button
                         onClick={() => removeFromRoutine(index)}
-                        className="px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg text-sm"
+                        className="px-2 py-1 text-red-600 hover:bg-red-50 rounded text-sm"
                       >
-                        Remove
+                        ×
                       </button>
                     </div>
                   ))}

@@ -24,8 +24,10 @@ function formatDuration(totalSeconds: number): string {
   return `${mins}m ${secs}s`;
 }
 
-type Tab = 'cardio' | 'strength' | 'routine';
+type Tab = 'cardio' | 'strength' | 'routine' | 'generator';
 type View = 'builder' | 'player';
+type Difficulty = 'easy' | 'medium' | 'hard';
+type Focus = 'full-body' | 'cardio' | 'strength' | 'upper' | 'lower' | 'core';
 
 const exercises: Exercise[] = [
   { id: 'kb-swing', name: 'Swing', image: 'kb-swing.jpg', reps: '15-20 reps @ 25lb', cue: 'Hips back, explosive drive', category: 'cardio' },
@@ -71,6 +73,13 @@ export default function Home() {
   const [phase, setPhase] = useState<'exercise' | 'rest'>('exercise');
   const [timeLeft, setTimeLeft] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
+
+  // Generator state
+  const [genDuration, setGenDuration] = useState(20);
+  const [genDifficulty, setGenDifficulty] = useState<Difficulty>('medium');
+  const [genFocus, setGenFocus] = useState<Focus>('full-body');
+  const [genPreview, setGenPreview] = useState<RoutineExercise[] | null>(null);
+  const [genAnimating, setGenAnimating] = useState(false);
 
   const addToRoutine = (exercise: Exercise) => {
     setRoutine([...routine, { ...exercise, restSeconds: 60, timeSeconds: 0 }]);
@@ -181,6 +190,101 @@ export default function Home() {
   const formatTime = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
 
   const filteredExercises = exercises.filter(e => e.category === activeTab);
+
+  // Random Workout Generator
+  const generateWorkout = () => {
+    setGenAnimating(true);
+    
+    // Exercise pools by focus
+    const cardioExercises = exercises.filter(e => e.category === 'cardio');
+    const strengthExercises = exercises.filter(e => e.category === 'strength');
+    const lowerBody = ['kb-swing', 'kb-goblet-squat', 'kb-deadlift', 'kb-front-squat', 'kb-pistol-squat', 'kb-sumo-high-pull', 'kb-thrusters'];
+    const upperBody = ['kb-clean-press', 'kb-snatch', 'kb-floor-press', 'kb-renegade-row', 'kb-z-press', 'kb-gorilla-row', 'kb-chainsaw-row', 'kb-half-kneeling-press'];
+    const core = ['kb-halo', 'kb-windmill', 'kb-turkish-getup', 'kb-plank-pass-through', 'kb-reverse-crunch', 'kb-kneeling-clean-windmill'];
+    
+    let pool: Exercise[] = [];
+    
+    switch (genFocus) {
+      case 'cardio':
+        pool = cardioExercises;
+        break;
+      case 'strength':
+        pool = strengthExercises;
+        break;
+      case 'upper':
+        pool = exercises.filter(e => upperBody.includes(e.id));
+        break;
+      case 'lower':
+        pool = exercises.filter(e => lowerBody.includes(e.id));
+        break;
+      case 'core':
+        pool = exercises.filter(e => core.includes(e.id));
+        break;
+      default: // full-body
+        pool = exercises;
+    }
+    
+    // Determine workout structure based on duration and difficulty
+    let numExercises: number;
+    let workTime: number;
+    let restTime: number;
+    let rounds: number;
+    
+    const difficultyMultiplier = genDifficulty === 'easy' ? 0.7 : genDifficulty === 'hard' ? 1.3 : 1.0;
+    const effectiveDuration = genDuration * difficultyMultiplier;
+    
+    if (effectiveDuration <= 15) {
+      numExercises = 4;
+      workTime = 30;
+      restTime = 30;
+      rounds = Math.max(2, Math.floor(effectiveDuration / 5));
+    } else if (effectiveDuration <= 25) {
+      numExercises = 5;
+      workTime = 40;
+      restTime = 20;
+      rounds = Math.max(3, Math.floor(effectiveDuration / 6));
+    } else if (effectiveDuration <= 35) {
+      numExercises = 6;
+      workTime = 45;
+      restTime = 15;
+      rounds = Math.max(3, Math.floor(effectiveDuration / 7));
+    } else {
+      numExercises = 6;
+      workTime = 60;
+      restTime = 15;
+      rounds = Math.max(4, Math.floor(effectiveDuration / 8));
+    }
+    
+    // Shuffle and pick exercises
+    const shuffled = [...pool].sort(() => Math.random() - 0.5);
+    const selected = shuffled.slice(0, numExercises);
+    
+    // Build the workout (repeat for rounds)
+    const workout: RoutineExercise[] = [];
+    for (let round = 0; round < rounds; round++) {
+      selected.forEach(ex => {
+        workout.push({
+          ...ex,
+          restSeconds: restTime,
+          timeSeconds: workTime,
+        });
+      });
+    }
+    
+    // Simulate "generating" animation
+    setTimeout(() => {
+      setGenPreview(workout);
+      setGenAnimating(false);
+    }, 800);
+  };
+
+  const acceptGeneratedWorkout = () => {
+    if (genPreview) {
+      setRoutine(genPreview);
+      setActiveTab('routine');
+      setGenPreview(null);
+    }
+  };
 
   // Player View
   if (view === 'player') {
@@ -312,7 +416,7 @@ export default function Home() {
       <main className="max-w-5xl mx-auto px-6 py-8">
         {/* Tabs */}
         <div className="flex gap-1 mb-8">
-          {(['cardio', 'strength', 'routine'] as Tab[]).map(tab => (
+          {(['cardio', 'strength', 'routine', 'generator'] as Tab[]).map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -323,6 +427,7 @@ export default function Home() {
               {tab === 'cardio' && `Cardio (${exercises.filter(e => e.category === 'cardio').length})`}
               {tab === 'strength' && `Strength (${exercises.filter(e => e.category === 'strength').length})`}
               {tab === 'routine' && `My Routine${routine.length > 0 ? ` (${routine.length})` : ''}`}
+              {tab === 'generator' && '⚡ Random'}
             </button>
           ))}
         </div>
@@ -462,6 +567,142 @@ export default function Home() {
                   Start Workout ({formatDuration(workoutDuration)})
                 </button>
               </>
+            )}
+          </div>
+        ) : activeTab === 'generator' ? (
+          // Random Workout Generator
+          <div className="max-w-2xl mx-auto">
+            <div className="bg-neutral-50 rounded-xl p-6 mb-6">
+              <h2 className="text-xl font-semibold mb-4">Generate Random Workout</h2>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">Duration</label>
+                  <div className="flex gap-2">
+                    {[10, 15, 20, 30, 45].map(mins => (
+                      <button
+                        key={mins}
+                        onClick={() => setGenDuration(mins)}
+                        className={`flex-1 py-2 rounded-lg font-medium transition-colors ${
+                          genDuration === mins
+                            ? 'bg-neutral-900 text-white'
+                            : 'bg-white border border-neutral-300 text-neutral-700 hover:border-neutral-400'
+                        }`}
+                      >
+                        {mins}m
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">Difficulty</label>
+                  <div className="flex gap-2">
+                    {(['easy', 'medium', 'hard'] as Difficulty[]).map(diff => (
+                      <button
+                        key={diff}
+                        onClick={() => setGenDifficulty(diff)}
+                        className={`flex-1 py-2 rounded-lg font-medium transition-colors capitalize ${
+                          genDifficulty === diff
+                            ? 'bg-neutral-900 text-white'
+                            : 'bg-white border border-neutral-300 text-neutral-700 hover:border-neutral-400'
+                        }`}
+                      >
+                        {diff}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">Focus Area</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {(['full-body', 'cardio', 'strength', 'upper', 'lower', 'core'] as Focus[]).map(focus => (
+                      <button
+                        key={focus}
+                        onClick={() => setGenFocus(focus)}
+                        className={`py-2 px-3 rounded-lg font-medium transition-colors capitalize text-sm ${
+                          genFocus === focus
+                            ? 'bg-neutral-900 text-white'
+                            : 'bg-white border border-neutral-300 text-neutral-700 hover:border-neutral-400'
+                        }`}
+                      >
+                        {focus.replace('-', ' ')}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <button
+                  onClick={generateWorkout}
+                  disabled={genAnimating}
+                  className="w-full py-3 bg-neutral-900 text-white rounded-lg font-medium text-lg hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed mt-4"
+                >
+                  {genAnimating ? 'Generating...' : '⚡ Generate Workout'}
+                </button>
+              </div>
+            </div>
+
+            {genPreview && (
+              <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
+                <div className="bg-neutral-50 rounded-xl p-6 mb-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold">Generated Workout</h3>
+                    <p className="text-sm text-neutral-500">
+                      {genPreview.length} exercises • {formatDuration(
+                        genPreview.reduce((acc, ex) => acc + ex.timeSeconds + ex.restSeconds, 0)
+                      )}
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    {genPreview.slice(0, 8).map((ex, i) => (
+                      <div key={i} className="flex items-center gap-3 p-2 bg-white rounded-lg">
+                        <div className="w-8 h-8 bg-neutral-200 rounded overflow-hidden flex-shrink-0">
+                          {ex.image.endsWith('.gif') ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={ex.image} alt={ex.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <Image src={ex.image} alt={ex.name} width={32} height={32} className="w-full h-full object-cover" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{ex.name}</p>
+                          <p className="text-xs text-neutral-500">{ex.timeSeconds}s work, {ex.restSeconds}s rest</p>
+                        </div>
+                      </div>
+                    ))}
+                    {genPreview.length > 8 && (
+                      <p className="text-sm text-neutral-500 text-center py-2">
+                        +{genPreview.length - 8} more exercises
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={generateWorkout}
+                    disabled={genAnimating}
+                    className="flex-1 py-3 border border-neutral-300 rounded-lg font-medium hover:bg-neutral-50 disabled:opacity-50"
+                  >
+                    Regenerate
+                  </button>
+                  <button
+                    onClick={acceptGeneratedWorkout}
+                    className="flex-1 py-3 bg-neutral-900 text-white rounded-lg font-medium hover:bg-neutral-800"
+                  >
+                    Use This Workout
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {!genPreview && (
+              <div className="text-center py-12 text-neutral-400">
+                <p className="text-lg mb-2">🎲 Ready for a surprise?</p>
+                <p className="text-sm">Pick your settings above and generate a random workout</p>
+              </div>
             )}
           </div>
         ) : (

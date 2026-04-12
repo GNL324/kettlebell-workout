@@ -12,12 +12,84 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Remove default button styles */
 button {
   cursor: pointer;
 }
 
-/* Smooth transitions */
 * {
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Timer animations */
+@keyframes pulse-ring {
+  0% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(1.3); opacity: 0; }
+}
+
+@keyframes countdown-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.timer-pulse {
+  animation: countdown-pulse 1s ease-in-out infinite;
+}
+
+.timer-warning {
+  animation: countdown-pulse 0.5s ease-in-out infinite;
+  color: #ef4444;
+}
+
+/* Drag feedback */
+.drag-over {
+  border-top: 2px solid #171717;
+}
+
+/* Confetti */
+@keyframes confetti-fall {
+  0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+}
+
+.confetti-piece {
+  position: fixed;
+  width: 10px;
+  height: 10px;
+  animation: confetti-fall 3s ease-out forwards;
+  z-index: 100;
+  pointer-events: none;
+}
+
+/* Smooth page transitions */
+.page-enter {
+  animation: slideIn 0.2s ease-out;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* PWA install prompt */
+.install-prompt {
+  animation: slideIn 0.3s ease-out;
+}
+
+/* Workout complete screen */
+.complete-screen {
+  animation: slideIn 0.4s ease-out;
+}
+
+/* Audio visualizer */
+.audio-bar {
+  animation: audioBounce 0.6s ease-in-out infinite alternate;
+}
+
+.audio-bar:nth-child(2) { animation-delay: 0.1s; }
+.audio-bar:nth-child(3) { animation-delay: 0.2s; }
+.audio-bar:nth-child(4) { animation-delay: 0.3s; }
+
+@keyframes audioBounce {
+  from { height: 8px; }
+  to { height: 24px; }
 }

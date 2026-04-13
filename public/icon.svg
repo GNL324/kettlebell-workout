@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#171717"/>
+  <g fill="#ffffff">
+    <!-- Kettlebell body -->
+    <ellipse cx="256" cy="340" rx="140" ry="120"/>
+    <!-- Kettlebell handle -->
+    <path d="M 180 280 L 180 200 Q 180 160 256 160 Q 332 160 332 200 L 332 280" stroke="#ffffff" stroke-width="50" fill="none" stroke-linecap="round"/>
+    <!-- Kettlebell top -->
+    <rect x="155" y="260" width="202" height="40" rx="10"/>
+  </g>
+</svg>

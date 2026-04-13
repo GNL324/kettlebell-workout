@@ -23,7 +23,7 @@ function formatDuration(totalSeconds: number): string {
   return `${mins}m ${secs}s`;
 }
 
-type Tab = 'cardio' | 'strength' | 'routine' | 'generator' | 'presets';
+type Tab = 'cardio' | 'strength' | 'routine' | 'generator' | 'presets' | 'history';
 type View = 'builder' | 'player';
 type Difficulty = 'easy' | 'medium' | 'hard';
 type Focus = 'full-body' | 'cardio' | 'strength' | 'upper' | 'lower' | 'core';
@@ -35,6 +35,22 @@ interface PresetWorkout {
   duration: string;
   difficulty: Difficulty;
   exercises: { id: string; timeSeconds: number; restSeconds: number }[];
+}
+
+interface WorkoutHistoryEntry {
+  id: string;
+  date: string; // ISO timestamp
+  duration: number; // seconds
+  exercises: number;
+  name?: string;
+  source: 'preset' | 'custom' | 'generated';
+}
+
+interface WorkoutPRs {
+  longestWorkout: number; // seconds
+  mostExercises: number;
+  totalWorkouts: number;
+  totalTime: number; // seconds
 }
 
 const presets: PresetWorkout[] = [
@@ -210,6 +226,7 @@ export default function Home() {
       setIsRunning(true);
     } else {
       // Workout complete
+      saveWorkoutComplete(routine, 'custom');
       setView('builder');
     }
   };
@@ -393,6 +410,52 @@ export default function Home() {
     setActiveTab('routine');
   };
 
+  // History tracking
+  const [workoutHistory, setWorkoutHistory] = useState<WorkoutHistoryEntry[]>([]);
+  const [prs, setPRs] = useState<WorkoutPRs>({ longestWorkout: 0, mostExercises: 0, totalWorkouts: 0, totalTime: 0 });
+
+  useEffect(() => {
+    // Load history from localStorage
+    const saved = localStorage.getItem('kettlebell-history');
+    if (saved) {
+      const history: WorkoutHistoryEntry[] = JSON.parse(saved);
+      setWorkoutHistory(history);
+      
+      // Calculate PRs
+      const prs: WorkoutPRs = {
+        longestWorkout: Math.max(...history.map(h => h.duration), 0),
+        mostExercises: Math.max(...history.map(h => h.exercises), 0),
+        totalWorkouts: history.length,
+        totalTime: history.reduce((sum, h) => sum + h.duration, 0),
+      };
+      setPRs(prs);
+    }
+  }, []);
+
+  const saveWorkoutComplete = (completedRoutine: RoutineExercise[], source: 'preset' | 'custom' | 'generated', presetName?: string) => {
+    const entry: WorkoutHistoryEntry = {
+      id: Date.now().toString(),
+      date: new Date().toISOString(),
+      duration: completedRoutine.reduce((sum, ex) => sum + ex.timeSeconds + ex.restSeconds, 0),
+      exercises: completedRoutine.length,
+      name: presetName,
+      source,
+    };
+    
+    const newHistory = [entry, ...workoutHistory].slice(0, 100); // Keep last 100
+    setWorkoutHistory(newHistory);
+    localStorage.setItem('kettlebell-history', JSON.stringify(newHistory));
+    
+    // Update PRs
+    const newPRs: WorkoutPRs = {
+      longestWorkout: Math.max(entry.duration, prs.longestWorkout),
+      mostExercises: Math.max(entry.exercises, prs.mostExercises),
+      totalWorkouts: newHistory.length,
+      totalTime: newHistory.reduce((sum, h) => sum + h.duration, 0),
+    };
+    setPRs(newPRs);
+  };
+
   // Player View
   if (view === 'player') {
     const currentExercise = routine[currentExerciseIndex];
@@ -540,6 +603,7 @@ export default function Home() {
               {tab === 'routine' && `My Routine${routine.length > 0 ? ` (${routine.length})` : ''}`}
               {tab === 'generator' && '⚡ Random'}
               {tab === 'presets' && '📋 Presets'}
+              {tab === 'history' && '📊 History'}
             </button>
           ))}
         </div>
@@ -901,6 +965,60 @@ export default function Home() {
                 </button>
               </div>
             ))}
+          </div>
+        )}
+
+        {activeTab === 'history' && (
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-xl font-semibold mb-6">Workout History</h2>
+            
+            {workoutHistory.length === 0 ? (
+              <div className="text-center py-12 text-neutral-400">
+                <p className="text-lg mb-2">No workouts yet</p>
+                <p className="text-sm">Complete a workout to start tracking your progress</p>
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                  <div className="bg-neutral-50 rounded-xl p-4 text-center">
+                    <p className="text-2xl font-semibold">{prs.totalWorkouts}</p>
+                    <p className="text-xs text-neutral-500">Total Workouts</p>
+                  </div>
+                  <div className="bg-neutral-50 rounded-xl p-4 text-center">
+                    <p className="text-2xl font-semibold">{formatDuration(prs.totalTime)}</p>
+                    <p className="text-xs text-neutral-500">Total Time</p>
+                  </div>
+                  <div className="bg-neutral-50 rounded-xl p-4 text-center">
+                    <p className="text-2xl font-semibold">{formatDuration(prs.longestWorkout)}</p>
+                    <p className="text-xs text-neutral-500">Longest Workout</p>
+                  </div>
+                  <div className="bg-neutral-50 rounded-xl p-4 text-center">
+                    <p className="text-2xl font-semibold">{prs.mostExercises}</p>
+                    <p className="text-xs text-neutral-500">Most Exercises</p>
+                  </div>
+                </div>
+
+                <h3 className="font-semibold mb-3">Recent Workouts</h3>
+                <div className="space-y-2">
+                  {workoutHistory.slice(0, 20).map((entry) => (
+                    <div key={entry.id} className="flex items-center justify-between p-3 bg-neutral-50 rounded-lg">
+                      <div>
+                        <p className="font-medium text-sm">
+                          {entry.name || (entry.source === 'preset' ? 'Preset Workout' : entry.source === 'generated' ? 'Random Workout' : 'Custom Workout')}
+                        </p>
+                        <p className="text-xs text-neutral-500">
+                          {new Date(entry.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-medium">{formatDuration(entry.duration)}</p>
+                        <p className="text-xs text-neutral-500">{entry.exercises} exercises</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         )}
       </main>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 
 interface Exercise {
@@ -216,6 +216,7 @@ export default function Home() {
     setTimeLeft(routine[0].timeSeconds);
     setIsRunning(true);
     setView('player');
+    playStartBeep();
   };
 
   const nextExercise = () => {
@@ -224,9 +225,11 @@ export default function Home() {
       setPhase('exercise');
       setTimeLeft(routine[currentExerciseIndex + 1].timeSeconds);
       setIsRunning(true);
+      playStartBeep();
     } else {
       // Workout complete
       saveWorkoutComplete(routine, 'custom');
+      playCompleteBeep();
       setView('builder');
     }
   };
@@ -244,6 +247,7 @@ export default function Home() {
     setPhase('rest');
     setTimeLeft(routine[currentExerciseIndex].restSeconds);
     setIsRunning(true);
+    playRestBeep();
   };
 
   const finishRest = () => {
@@ -268,6 +272,12 @@ export default function Home() {
       }
       return;
     }
+    
+    // Countdown beep in last 3 seconds
+    if (timeLeft <= 3 && timeLeft > 0) {
+      playCountdownBeep();
+    }
+    
     const timer = setInterval(() => setTimeLeft(t => t - 1), 1000);
     return () => clearInterval(timer);
   }, [isRunning, timeLeft, phase, currentExerciseIndex]);
@@ -410,6 +420,41 @@ export default function Home() {
     setActiveTab('routine');
   };
 
+  // Audio cues
+  const audioContextRef = useRef<AudioContext | null>(null);
+
+  const playBeep = (frequency: number, duration: number, type: OscillatorType = 'sine') => {
+    if (typeof window === 'undefined') return;
+    
+    if (!audioContextRef.current) {
+      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+    }
+    
+    const ctx = audioContextRef.current;
+    const oscillator = ctx.createOscillator();
+    const gainNode = ctx.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(ctx.destination);
+    
+    oscillator.frequency.value = frequency;
+    oscillator.type = type;
+    
+    gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration);
+    
+    oscillator.start(ctx.currentTime);
+    oscillator.stop(ctx.currentTime + duration);
+  };
+
+  const playStartBeep = () => playBeep(880, 0.15); // A5
+  const playRestBeep = () => playBeep(440, 0.15); // A4
+  const playCountdownBeep = () => playBeep(660, 0.1, 'square'); // E5
+  const playCompleteBeep = () => {
+    playBeep(523.25, 0.2); // C5
+    setTimeout(() => playBeep(659.25, 0.2), 150); // E5
+    setTimeout(() => playBeep(783.99, 0.3), 300); // G5
+  };
   // History tracking
   const [workoutHistory, setWorkoutHistory] = useState<WorkoutHistoryEntry[]>([]);
   const [prs, setPRs] = useState<WorkoutPRs>({ longestWorkout: 0, mostExercises: 0, totalWorkouts: 0, totalTime: 0 });

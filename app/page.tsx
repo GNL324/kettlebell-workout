@@ -23,10 +23,88 @@ function formatDuration(totalSeconds: number): string {
   return `${mins}m ${secs}s`;
 }
 
-type Tab = 'cardio' | 'strength' | 'routine' | 'generator';
+type Tab = 'cardio' | 'strength' | 'routine' | 'generator' | 'presets';
 type View = 'builder' | 'player';
 type Difficulty = 'easy' | 'medium' | 'hard';
 type Focus = 'full-body' | 'cardio' | 'strength' | 'upper' | 'lower' | 'core';
+
+interface PresetWorkout {
+  id: string;
+  name: string;
+  description: string;
+  duration: string;
+  difficulty: Difficulty;
+  exercises: { id: string; timeSeconds: number; restSeconds: number }[];
+}
+
+const presets: PresetWorkout[] = [
+  {
+    id: 'beginner-fullbody',
+    name: 'Beginner Full Body',
+    description: 'Great for newcomers — full body coverage, moderate pace',
+    duration: '20 min',
+    difficulty: 'easy',
+    exercises: [
+      { id: 'kb-swing', timeSeconds: 30, restSeconds: 30 },
+      { id: 'kb-goblet-squat', timeSeconds: 30, restSeconds: 30 },
+      { id: 'kb-floor-press', timeSeconds: 30, restSeconds: 30 },
+      { id: 'kb-renegade-row', timeSeconds: 30, restSeconds: 30 },
+      { id: 'kb-halo', timeSeconds: 30, restSeconds: 30 },
+    ],
+  },
+  {
+    id: 'hiit-cardio',
+    name: 'HIIT Cardio Blast',
+    description: 'High intensity cardio — burn calories fast',
+    duration: '15 min',
+    difficulty: 'hard',
+    exercises: [
+      { id: 'kb-american-swing', timeSeconds: 40, restSeconds: 20 },
+      { id: 'kb-snatch', timeSeconds: 40, restSeconds: 20 },
+      { id: 'kb-thrusters', timeSeconds: 40, restSeconds: 20 },
+      { id: 'kb-burpee-over', timeSeconds: 40, restSeconds: 20 },
+    ],
+  },
+  {
+    id: 'strength-lower',
+    name: 'Lower Body Strength',
+    description: 'Build leg and glute strength',
+    duration: '25 min',
+    difficulty: 'medium',
+    exercises: [
+      { id: 'kb-deadlift', timeSeconds: 45, restSeconds: 45 },
+      { id: 'kb-front-squat', timeSeconds: 45, restSeconds: 45 },
+      { id: 'kb-pistol-squat', timeSeconds: 45, restSeconds: 45 },
+      { id: 'kb-sumo-high-pull', timeSeconds: 45, restSeconds: 45 },
+    ],
+  },
+  {
+    id: 'upper-power',
+    name: 'Upper Body Power',
+    description: 'Push and pull strength for upper body',
+    duration: '25 min',
+    difficulty: 'medium',
+    exercises: [
+      { id: 'kb-clean-press', timeSeconds: 45, restSeconds: 45 },
+      { id: 'kb-z-press', timeSeconds: 45, restSeconds: 45 },
+      { id: 'kb-gorilla-row', timeSeconds: 45, restSeconds: 45 },
+      { id: 'kb-chainsaw-row', timeSeconds: 45, restSeconds: 45 },
+    ],
+  },
+  {
+    id: 'core-crusher',
+    name: 'Core Crusher',
+    description: 'Abs and obliques focused workout',
+    duration: '15 min',
+    difficulty: 'medium',
+    exercises: [
+      { id: 'kb-halo', timeSeconds: 30, restSeconds: 30 },
+      { id: 'kb-windmill', timeSeconds: 30, restSeconds: 30 },
+      { id: 'kb-plank-pass-through', timeSeconds: 30, restSeconds: 30 },
+      { id: 'kb-reverse-crunch', timeSeconds: 30, restSeconds: 30 },
+    ],
+  },
+];
 
 const exercises: Exercise[] = [
   { id: 'kb-swing', name: 'Swing', image: 'kb-swing.jpg', cue: 'Hips back, explosive drive', category: 'cardio' },
@@ -301,6 +379,20 @@ export default function Home() {
     }
   };
 
+  const loadPreset = (preset: PresetWorkout) => {
+    const presetRoutine: RoutineExercise[] = preset.exercises.map(ex => {
+      const exercise = exercises.find(e => e.id === ex.id);
+      if (!exercise) return null;
+      return {
+        ...exercise,
+        timeSeconds: ex.timeSeconds,
+        restSeconds: ex.restSeconds,
+      };
+    }).filter((ex): ex is RoutineExercise => ex !== null);
+    setRoutine(presetRoutine);
+    setActiveTab('routine');
+  };
+
   // Player View
   if (view === 'player') {
     const currentExercise = routine[currentExerciseIndex];
@@ -447,6 +539,7 @@ export default function Home() {
               {tab === 'strength' && `Strength (${exercises.filter(e => e.category === 'strength').length})`}
               {tab === 'routine' && `My Routine${routine.length > 0 ? ` (${routine.length})` : ''}`}
               {tab === 'generator' && '⚡ Random'}
+              {tab === 'presets' && '📋 Presets'}
             </button>
           ))}
         </div>
@@ -721,6 +814,70 @@ export default function Home() {
                 <p className="text-sm">Pick your settings above and generate a random workout</p>
               </div>
             )}
+          </div>
+        ) : activeTab === 'presets' ? (
+          // Presets Tab
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-xl font-semibold mb-6">Pre-built Workouts</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {presets.map(preset => (
+                <div
+                  key={preset.id}
+                  className="bg-neutral-50 rounded-xl p-5 hover:bg-neutral-100 transition-colors"
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <h3 className="font-semibold text-lg">{preset.name}</h3>
+                      <p className="text-sm text-neutral-500 mt-1">{preset.description}</p>
+                    </div>
+                    <span
+                      className={`px-2 py-1 rounded text-xs font-medium capitalize ${
+                        preset.difficulty === 'easy' ? 'bg-green-100 text-green-700' :
+                        preset.difficulty === 'medium' ? 'bg-yellow-100 text-yellow-700' :
+                        'bg-red-100 text-red-700'
+                      }`}
+                    >
+                      {preset.difficulty}
+                    </span>
+                  </div>
+                  
+                  <div className="flex items-center gap-4 mb-4">
+                    <span className="text-sm text-neutral-600">⏱ {preset.duration}</span>
+                    <span className="text-sm text-neutral-600">{preset.exercises.length} exercises</span>
+                  </div>
+
+                  <div className="space-y-1 mb-4">
+                    {preset.exercises.slice(0, 4).map((ex, i) => {
+                      const exercise = exercises.find(e => e.id === ex.id);
+                      return (
+                        <div key={i} className="flex items-center gap-2 text-sm">
+                          <div className="w-6 h-6 bg-neutral-200 rounded overflow-hidden flex-shrink-0">
+                            {exercise?.image.endsWith('.gif') ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={exercise.image} alt={exercise.name} className="w-full h-full object-cover" />
+                            ) : (
+                              <Image src={exercise?.image || ''} alt={exercise?.name || ''} width={24} height={24} className="w-full h-full object-cover" />
+                            )}
+                          </div>
+                          <span className="text-neutral-700 truncate">{exercise?.name}</span>
+                          <span className="text-neutral-400 text-xs">{ex.timeSeconds}s</span>
+                        </div>
+                      );
+                    })}
+                    {preset.exercises.length > 4 && (
+                      <p className="text-xs text-neutral-400">+{preset.exercises.length - 4} more</p>
+                    )}
+                  </div>
+
+                  <button
+                    onClick={() => loadPreset(preset)}
+                    className="w-full py-2 bg-neutral-900 text-white rounded-lg font-medium text-sm hover:bg-neutral-800 transition-colors"
+                  >
+                    Start This Workout
+                  </button>
+                </div>
+              ))}
+            </div>
           </div>
         ) : (
           // Exercise Grid

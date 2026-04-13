@@ -422,6 +422,12 @@ export default function Home() {
 
   // Audio cues
   const audioContextRef = useRef<AudioContext | null>(null);
+  const [flash, setFlash] = useState<'start' | 'rest' | 'countdown' | 'complete' | null>(null);
+
+  const triggerFlash = (type: 'start' | 'rest' | 'countdown' | 'complete') => {
+    setFlash(type);
+    setTimeout(() => setFlash(null), type === 'complete' ? 600 : 150);
+  };
 
   const playBeep = (frequency: number, duration: number, type: OscillatorType = 'sine') => {
     if (typeof window === 'undefined') return;
@@ -447,13 +453,26 @@ export default function Home() {
     oscillator.stop(ctx.currentTime + duration);
   };
 
-  const playStartBeep = () => playBeep(880, 0.15); // A5
-  const playRestBeep = () => playBeep(440, 0.15); // A4
-  const playCountdownBeep = () => playBeep(660, 0.1, 'square'); // E5
+  const playStartBeep = () => {
+    playBeep(880, 0.15);
+    triggerFlash('start');
+  };
+  const playRestBeep = () => {
+    playBeep(440, 0.15);
+    triggerFlash('rest');
+  };
+  const playCountdownBeep = () => {
+    playBeep(660, 0.1, 'square');
+    triggerFlash('countdown');
+  };
   const playCompleteBeep = () => {
-    playBeep(523.25, 0.2); // C5
-    setTimeout(() => playBeep(659.25, 0.2), 150); // E5
-    setTimeout(() => playBeep(783.99, 0.3), 300); // G5
+    playBeep(523.25, 0.2);
+    triggerFlash('complete');
+    setTimeout(() => playBeep(659.25, 0.2), 150);
+    setTimeout(() => {
+      playBeep(783.99, 0.3);
+      triggerFlash('complete');
+    }, 300);
   };
   // History tracking
   const [workoutHistory, setWorkoutHistory] = useState<WorkoutHistoryEntry[]>([]);
@@ -505,8 +524,20 @@ export default function Home() {
   if (view === 'player') {
     const currentExercise = routine[currentExerciseIndex];
     return (
-      <div className="min-h-screen bg-white text-neutral-900">
-        <div className="max-w-3xl mx-auto px-6 py-8">
+      <div className="min-h-screen bg-white text-neutral-900 relative">
+        {/* Flash overlay */}
+        {flash && (
+          <div
+            className={`absolute inset-0 pointer-events-none z-50 transition-opacity duration-150 ${
+              flash === 'start' ? 'bg-green-400/30' :
+              flash === 'rest' ? 'bg-yellow-400/30' :
+              flash === 'countdown' ? 'bg-orange-400/30' :
+              'bg-blue-400/30'
+            } ${flash ? 'opacity-100' : 'opacity-0'}`}
+          />
+        )}
+        
+        <div className="max-w-3xl mx-auto px-6 py-8 relative z-10">
           <div className="flex items-center justify-between mb-6">
             <button onClick={() => setView('builder')} className="text-sm text-neutral-500 hover:text-neutral-900">
               ← Exit Workout

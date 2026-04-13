@@ -119,8 +119,8 @@ export default function Home() {
     if (routine.length === 0) return;
     setCurrentExerciseIndex(0);
     setPhase('exercise');
-    setTimeLeft(0);
-    setIsRunning(false);
+    setTimeLeft(routine[0].timeSeconds);
+    setIsRunning(true);
     setView('player');
   };
 
@@ -128,8 +128,11 @@ export default function Home() {
     if (currentExerciseIndex < routine.length - 1) {
       setCurrentExerciseIndex(prev => prev + 1);
       setPhase('exercise');
-      setTimeLeft(0);
-      setIsRunning(false);
+      setTimeLeft(routine[currentExerciseIndex + 1].timeSeconds);
+      setIsRunning(true);
+    } else {
+      // Workout complete
+      setView('builder');
     }
   };
 
@@ -137,8 +140,8 @@ export default function Home() {
     if (currentExerciseIndex > 0) {
       setCurrentExerciseIndex(prev => prev - 1);
       setPhase('exercise');
-      setTimeLeft(0);
-      setIsRunning(false);
+      setTimeLeft(routine[currentExerciseIndex - 1].timeSeconds);
+      setIsRunning(true);
     }
   };
 
@@ -152,17 +155,27 @@ export default function Home() {
     nextExercise();
   };
 
-  // Timer effect
+  const skipExercise = () => {
+    nextExercise();
+  };
+
+  // Timer effect - handles both exercise and rest countdown
   useEffect(() => {
     if (!isRunning || timeLeft <= 0) {
-      if (isRunning && timeLeft <= 0 && phase === 'rest') {
-        finishRest();
+      if (isRunning && timeLeft <= 0) {
+        if (phase === 'exercise') {
+          // Exercise complete - auto-start rest
+          startRest();
+        } else if (phase === 'rest') {
+          // Rest complete - auto-next exercise
+          finishRest();
+        }
       }
       return;
     }
     const timer = setInterval(() => setTimeLeft(t => t - 1), 1000);
     return () => clearInterval(timer);
-  }, [isRunning, timeLeft, phase]);
+  }, [isRunning, timeLeft, phase, currentExerciseIndex]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -179,6 +192,9 @@ export default function Home() {
       } else if (e.code === 'ArrowLeft') {
         e.preventDefault();
         prevExercise();
+      } else if (e.code === 'ArrowRight') {
+        e.preventDefault();
+        nextExercise();
       }
     };
     
@@ -311,6 +327,11 @@ export default function Home() {
 
           {phase === 'exercise' ? (
             <>
+              <div className="text-center mb-6">
+                <p className="text-sm text-neutral-500 uppercase tracking-wide mb-2">Exercise</p>
+                <div className="text-7xl font-light tabular-nums mb-4 timer-pulse">{formatTime(timeLeft)}</div>
+              </div>
+              
               <div className="aspect-video bg-neutral-100 rounded-xl overflow-hidden mb-6">
                 {currentExercise.image.endsWith('.gif') ? (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -321,7 +342,6 @@ export default function Home() {
               </div>
 
               <h2 className="text-3xl font-semibold mb-2">{currentExercise.name}</h2>
-              <p className="text-lg text-neutral-600 mb-2">{formatTime(currentExercise.timeSeconds)}</p>
               <p className="text-neutral-500 mb-8">{currentExercise.cue}</p>
 
               <div className="flex gap-3">
@@ -333,17 +353,17 @@ export default function Home() {
                   Previous
                 </button>
                 <button
-                  onClick={startRest}
+                  onClick={skipExercise}
                   className="flex-1 py-3 bg-neutral-900 text-white rounded-lg font-medium"
                 >
-                  Done → Rest
+                  Skip → Rest
                 </button>
               </div>
             </>
           ) : (
             <div className="text-center py-8">
               <p className="text-sm text-neutral-500 uppercase tracking-wide mb-4">Rest</p>
-              <div className="text-7xl font-light tabular-nums mb-8">{formatTime(timeLeft)}</div>
+              <div className="text-7xl font-light tabular-nums mb-8 timer-warning">{formatTime(timeLeft)}</div>
               
               {currentExerciseIndex < routine.length - 1 && (
                 <div className="mb-8">

@@ -7,7 +7,6 @@ interface Exercise {
   id: string;
   name: string;
   image: string;
-  reps: string;
   cue: string;
   category: 'cardio' | 'strength';
 }
@@ -30,33 +29,33 @@ type Difficulty = 'easy' | 'medium' | 'hard';
 type Focus = 'full-body' | 'cardio' | 'strength' | 'upper' | 'lower' | 'core';
 
 const exercises: Exercise[] = [
-  { id: 'kb-swing', name: 'Swing', image: 'kb-swing.jpg', reps: '15-20 reps @ 25lb', cue: 'Hips back, explosive drive', category: 'cardio' },
-  { id: 'kb-american-swing', name: 'American Swing', image: 'kb-american-swing.jpg', reps: '12-15 reps @ 25lb', cue: 'Swing overhead, full extension', category: 'cardio' },
-  { id: 'jump-rope', name: 'Jump Rope', image: 'jump-rope.gif', reps: '2 minutes', cue: 'Light on feet, consistent rhythm', category: 'cardio' },
-  { id: 'kb-goblet-squat', name: 'Goblet Squat', image: 'kb-goblet-squat.jpg', reps: '12-15 reps @ 35lb', cue: 'Chest up, depth below parallel', category: 'cardio' },
-  { id: 'kb-clean-press', name: 'Clean & Press', image: 'kb-clean-press.jpg', reps: '8-10 reps @ 25lb each', cue: 'Explosive clean, strict press', category: 'cardio' },
-  { id: 'kb-snatch', name: 'Snatch', image: 'kb-snatch.jpg', reps: '8-10 reps @ 25lb each', cue: 'High pull, punch through', category: 'cardio' },
-  { id: 'kb-thrusters', name: 'Thrusters', image: 'kb-thrusters.gif', reps: '10-12 reps @ 25lb each', cue: 'Squat then press in one motion', category: 'cardio' },
-  { id: 'kb-halo', name: 'Halo', image: 'kb-halo.gif', reps: '30s each direction @ 15lb', cue: 'Circle around head, tight core', category: 'cardio' },
-  { id: 'kb-burpee-over', name: 'Burpee Over', image: 'kb-burpee-over.jpg', reps: '8-10 reps', cue: 'Jump over kettlebell', category: 'cardio' },
-  { id: 'kb-swing-clean', name: 'Swing to Clean', image: 'kb-swing-clean.jpg', reps: '10-12 reps @ 25lb', cue: 'Swing into rack position', category: 'cardio' },
-  { id: 'kb-sumo-high-pull', name: 'Sumo High Pull', image: 'kb-sumo-high-pull.jpg', reps: '12-15 reps @ 25lb', cue: 'Wide stance, pull to chin', category: 'cardio' },
-  { id: 'kb-pistol-squat', name: 'Pistol Squat', image: 'kb-pistol-squat.gif', reps: '5-8 reps @ 15lb', cue: 'Single leg, counterbalance', category: 'cardio' },
-  { id: 'kb-deadlift', name: 'Deadlift', image: 'kb-deadlift.jpg', reps: '10-12 reps @ 35lb+', cue: 'Hinge at hips, flat back', category: 'strength' },
-  { id: 'kb-front-squat', name: 'Front Squat', image: 'kb-front-squat.jpg', reps: '10-12 reps @ 25lb each', cue: 'Elbows up, upright torso', category: 'strength' },
-  { id: 'kb-floor-press', name: 'Floor Press', image: 'kb-floor-press.gif', reps: '10-12 reps @ 25lb each', cue: 'Press from floor, control descent', category: 'strength' },
-  { id: 'kb-renegade-row', name: 'Renegade Row', image: 'kb-renegade-row.jpg', reps: '8-10 reps @ 25lb each', cue: 'Plank position, row without rotation', category: 'strength' },
-  { id: 'kb-turkish-getup', name: 'Turkish Get-Up', image: 'kb-turkish-getup.gif', reps: '3-5 reps @ 15-25lb', cue: 'Slow and controlled, eye on bell', category: 'strength' },
-  { id: 'kb-farmers-walk', name: "Farmer's Walk", image: 'kb-farmers-walk.gif', reps: '40-60 yards @ 35lb each', cue: 'Shoulders back, grip tight', category: 'strength' },
-  { id: 'kb-overhead-carry', name: 'Overhead Carry', image: 'kb-overhead-carry.jpg', reps: '30-40 yards @ 15-25lb', cue: 'Arm locked out, stable shoulder', category: 'strength' },
-  { id: 'kb-windmill', name: 'Windmill', image: 'kb-windmill.jpg', reps: '5-8 reps @ 15-25lb', cue: 'Hinge with straight legs, eye on bell', category: 'strength' },
-  { id: 'kb-z-press', name: 'Z-Press', image: 'kb-z-press.jpg', reps: '8-10 reps @ 25lb each', cue: 'Seated, strict overhead press', category: 'strength' },
-  { id: 'kb-gorilla-row', name: 'Gorilla Row', image: 'kb-gorilla-row.jpg', reps: '10-12 reps @ 25lb each', cue: 'Wide stance, alternating rows', category: 'strength' },
-  { id: 'kb-chainsaw-row', name: 'Chainsaw Row', image: 'kb-chainsaw-row.jpg', reps: '8-10 reps @ 35lb', cue: 'Meadow row position, explosive', category: 'strength' },
-  { id: 'kb-half-kneeling-press', name: 'Half-Kneeling Press', image: 'kb-half-kneeling-press.jpg', reps: '8-10 reps @ 25lb each', cue: 'Core tight, press from stable base', category: 'strength' },
-  { id: 'kb-kneeling-clean-windmill', name: 'Clean to Windmill', image: 'kb-kneeling-clean-windmill.jpg', reps: '5-8 reps @ 15-25lb', cue: 'Clean then windmill in one motion', category: 'strength' },
-  { id: 'kb-plank-pass-through', name: 'Plank Pass-Through', image: 'kb-plank-pass-through.jpg', reps: '10-12 reps @ 15lb', cue: 'Keep hips stable, drag bell under', category: 'strength' },
-  { id: 'kb-reverse-crunch', name: 'Reverse Crunch', image: 'kb-reverse-crunch.jpg', reps: '12-15 reps @ 15lb', cue: 'Bell on chest, crunch knees to chest', category: 'strength' },
+  { id: 'kb-swing', name: 'Swing', image: 'kb-swing.jpg', cue: 'Hips back, explosive drive', category: 'cardio' },
+  { id: 'kb-american-swing', name: 'American Swing', image: 'kb-american-swing.jpg', cue: 'Swing overhead, full extension', category: 'cardio' },
+  { id: 'jump-rope', name: 'Jump Rope', image: 'jump-rope.gif', cue: 'Light on feet, consistent rhythm', category: 'cardio' },
+  { id: 'kb-goblet-squat', name: 'Goblet Squat', image: 'kb-goblet-squat.jpg', cue: 'Chest up, depth below parallel', category: 'cardio' },
+  { id: 'kb-clean-press', name: 'Clean & Press', image: 'kb-clean-press.jpg', cue: 'Explosive clean, strict press', category: 'cardio' },
+  { id: 'kb-snatch', name: 'Snatch', image: 'kb-snatch.jpg', cue: 'High pull, punch through', category: 'cardio' },
+  { id: 'kb-thrusters', name: 'Thrusters', image: 'kb-thrusters.gif', cue: 'Squat then press in one motion', category: 'cardio' },
+  { id: 'kb-halo', name: 'Halo', image: 'kb-halo.gif', cue: 'Circle around head, tight core', category: 'cardio' },
+  { id: 'kb-burpee-over', name: 'Burpee Over', image: 'kb-burpee-over.jpg', cue: 'Jump over kettlebell', category: 'cardio' },
+  { id: 'kb-swing-clean', name: 'Swing to Clean', image: 'kb-swing-clean.jpg', cue: 'Swing into rack position', category: 'cardio' },
+  { id: 'kb-sumo-high-pull', name: 'Sumo High Pull', image: 'kb-sumo-high-pull.jpg', cue: 'Wide stance, pull to chin', category: 'cardio' },
+  { id: 'kb-pistol-squat', name: 'Pistol Squat', image: 'kb-pistol-squat.gif', cue: 'Single leg, counterbalance', category: 'cardio' },
+  { id: 'kb-deadlift', name: 'Deadlift', image: 'kb-deadlift.jpg', cue: 'Hinge at hips, flat back', category: 'strength' },
+  { id: 'kb-front-squat', name: 'Front Squat', image: 'kb-front-squat.jpg', cue: 'Elbows up, upright torso', category: 'strength' },
+  { id: 'kb-floor-press', name: 'Floor Press', image: 'kb-floor-press.gif', cue: 'Press from floor, control descent', category: 'strength' },
+  { id: 'kb-renegade-row', name: 'Renegade Row', image: 'kb-renegade-row.jpg', cue: 'Plank position, row without rotation', category: 'strength' },
+  { id: 'kb-turkish-getup', name: 'Turkish Get-Up', image: 'kb-turkish-getup.gif', cue: 'Slow and controlled, eye on bell', category: 'strength' },
+  { id: 'kb-farmers-walk', name: "Farmer's Walk", image: 'kb-farmers-walk.gif', cue: 'Shoulders back, grip tight', category: 'strength' },
+  { id: 'kb-overhead-carry', name: 'Overhead Carry', image: 'kb-overhead-carry.jpg', cue: 'Arm locked out, stable shoulder', category: 'strength' },
+  { id: 'kb-windmill', name: 'Windmill', image: 'kb-windmill.jpg', cue: 'Hinge with straight legs, eye on bell', category: 'strength' },
+  { id: 'kb-z-press', name: 'Z-Press', image: 'kb-z-press.jpg', cue: 'Seated, strict overhead press', category: 'strength' },
+  { id: 'kb-gorilla-row', name: 'Gorilla Row', image: 'kb-gorilla-row.jpg', cue: 'Wide stance, alternating rows', category: 'strength' },
+  { id: 'kb-chainsaw-row', name: 'Chainsaw Row', image: 'kb-chainsaw-row.jpg', cue: 'Meadow row position, explosive', category: 'strength' },
+  { id: 'kb-half-kneeling-press', name: 'Half-Kneeling Press', image: 'kb-half-kneeling-press.jpg', cue: 'Core tight, press from stable base', category: 'strength' },
+  { id: 'kb-kneeling-clean-windmill', name: 'Clean to Windmill', image: 'kb-kneeling-clean-windmill.jpg', cue: 'Clean then windmill in one motion', category: 'strength' },
+  { id: 'kb-plank-pass-through', name: 'Plank Pass-Through', image: 'kb-plank-pass-through.jpg', cue: 'Keep hips stable, drag bell under', category: 'strength' },
+  { id: 'kb-reverse-crunch', name: 'Reverse Crunch', image: 'kb-reverse-crunch.jpg', cue: 'Bell on chest, crunch knees to chest', category: 'strength' },
 ];
 
 export default function Home() {
@@ -82,7 +81,7 @@ export default function Home() {
   const [genAnimating, setGenAnimating] = useState(false);
 
   const addToRoutine = (exercise: Exercise) => {
-    setRoutine([...routine, { ...exercise, restSeconds: 60, timeSeconds: 0 }]);
+    setRoutine([...routine, { ...exercise, restSeconds: 60, timeSeconds: 45 }]);
   };
 
   const removeFromRoutine = (index: number) => {
@@ -322,7 +321,7 @@ export default function Home() {
               </div>
 
               <h2 className="text-3xl font-semibold mb-2">{currentExercise.name}</h2>
-              <p className="text-lg text-neutral-600 mb-2">{currentExercise.reps}</p>
+              <p className="text-lg text-neutral-600 mb-2">{formatTime(currentExercise.timeSeconds)}</p>
               <p className="text-neutral-500 mb-8">{currentExercise.cue}</p>
 
               <div className="flex gap-3">
@@ -362,7 +361,7 @@ export default function Home() {
                   </div>
                   <div className="mt-4">
                     <p className="text-lg font-medium">{routine[currentExerciseIndex + 1].name}</p>
-                    <p className="text-neutral-500">{routine[currentExerciseIndex + 1].reps}</p>
+                    <p className="text-neutral-500">{formatTime(routine[currentExerciseIndex + 1].timeSeconds)}</p>
                   </div>
                 </div>
               )}
@@ -508,18 +507,16 @@ export default function Home() {
 
                       <div className="flex-1 min-w-0">
                         <h3 className="font-medium text-sm truncate">{exercise.name}</h3>
-                        <p className="text-xs text-neutral-500 truncate">{exercise.reps}</p>
                       </div>
 
                       <div className="flex items-center gap-2">
                         <div className="flex items-center gap-1">
-                          <span className="text-xs text-neutral-500">Time:</span>
+                          <span className="text-xs text-neutral-500">Work:</span>
                           <select
                             value={exercise.timeSeconds}
                             onChange={(e) => updateTime(index, parseInt(e.target.value))}
                             className="px-2 py-1 border border-neutral-300 rounded text-sm"
                           >
-                            <option value={0}>Reps</option>
                             <option value={15}>15s</option>
                             <option value={30}>30s</option>
                             <option value={45}>45s</option>
@@ -719,7 +716,6 @@ export default function Home() {
                   )}
                 </div>
                 <h3 className="font-medium text-sm">{exercise.name}</h3>
-                <p className="text-xs text-neutral-500 mb-2">{exercise.reps}</p>
                 <button
                   onClick={() => addToRoutine(exercise)}
                   className="w-full py-2 text-sm rounded-lg font-medium transition-colors bg-neutral-900 text-white hover:bg-neutral-800"

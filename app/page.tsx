@@ -9,6 +9,7 @@ interface Exercise {
   image: string;
   cue: string;
   category: 'cardio' | 'strength';
+  active?: boolean;
 }
 
 interface RoutineExercise extends Exercise {
@@ -131,17 +132,17 @@ const exercises: Exercise[] = [
   { id: 'kb-snatch', name: 'Snatch', image: 'kb-snatch.jpg', cue: 'High pull, punch through', category: 'cardio' },
   { id: 'kb-thrusters', name: 'Thrusters', image: 'kb-thrusters.gif', cue: 'Squat then press in one motion', category: 'cardio' },
   { id: 'kb-halo', name: 'Halo', image: 'kb-halo.gif', cue: 'Circle around head, tight core', category: 'cardio' },
-  { id: 'kb-burpee-over', name: 'Burpee Over', image: 'kb-burpee-over.jpg', cue: 'Jump over kettlebell', category: 'cardio' },
+  { id: 'kb-burpee-over', name: 'Burpee Over', image: 'kb-burpee-over.jpg', cue: 'Jump over kettlebell', category: 'cardio', active: false },
   { id: 'kb-swing-clean', name: 'Swing to Clean', image: 'kb-swing-clean.jpg', cue: 'Swing into rack position', category: 'cardio' },
   { id: 'kb-sumo-high-pull', name: 'Sumo High Pull', image: 'kb-sumo-high-pull.jpg', cue: 'Wide stance, pull to chin', category: 'cardio' },
-  { id: 'kb-pistol-squat', name: 'Pistol Squat', image: 'kb-pistol-squat.gif', cue: 'Single leg, counterbalance', category: 'cardio' },
+  { id: 'kb-pistol-squat', name: 'Pistol Squat', image: 'kb-pistol-squat.gif', cue: 'Single leg, counterbalance', category: 'cardio', active: false },
   { id: 'kb-deadlift', name: 'Deadlift', image: 'kb-deadlift.jpg', cue: 'Hinge at hips, flat back', category: 'strength' },
   { id: 'kb-front-squat', name: 'Front Squat', image: 'kb-front-squat.jpg', cue: 'Elbows up, upright torso', category: 'strength' },
   { id: 'kb-floor-press', name: 'Floor Press', image: 'kb-floor-press.gif', cue: 'Press from floor, control descent', category: 'strength' },
-  { id: 'kb-renegade-row', name: 'Renegade Row', image: 'kb-renegade-row.jpg', cue: 'Plank position, row without rotation', category: 'strength' },
-  { id: 'kb-turkish-getup', name: 'Turkish Get-Up', image: 'kb-turkish-getup.gif', cue: 'Slow and controlled, eye on bell', category: 'strength' },
+  { id: 'kb-renegade-row', name: 'Renegade Row', image: 'kb-renegade-row.jpg', cue: 'Plank position, row without rotation', category: 'strength', active: false },
+  { id: 'kb-turkish-getup', name: 'Turkish Get-Up', image: 'kb-turkish-getup.gif', cue: 'Slow and controlled, eye on bell', category: 'strength', active: false },
   { id: 'kb-farmers-walk', name: "Farmer's Walk", image: 'kb-farmers-walk.gif', cue: 'Shoulders back, grip tight', category: 'strength' },
-  { id: 'kb-overhead-carry', name: 'Overhead Carry', image: 'kb-overhead-carry.jpg', cue: 'Arm locked out, stable shoulder', category: 'strength' },
+  { id: 'kb-overhead-carry', name: 'Overhead Carry', image: 'kb-overhead-carry.jpg', cue: 'Arm locked out, stable shoulder', category: 'strength', active: false },
   { id: 'kb-windmill', name: 'Windmill', image: 'kb-windmill.jpg', cue: 'Hinge with straight legs, eye on bell', category: 'strength' },
   { id: 'kb-z-press', name: 'Z-Press', image: 'kb-z-press.jpg', cue: 'Seated, strict overhead press', category: 'strength' },
   { id: 'kb-gorilla-row', name: 'Gorilla Row', image: 'kb-gorilla-row.jpg', cue: 'Wide stance, alternating rows', category: 'strength' },
@@ -309,18 +310,19 @@ export default function Home() {
 
   const formatTime = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
 
-  const filteredExercises = exercises.filter(e => e.category === activeTab);
+  // Filter out inactive exercises
+  const filteredExercises = exercises.filter(e => e.category === activeTab && e.active !== false);
 
   // Random Workout Generator
   const generateWorkout = () => {
     setGenAnimating(true);
     
-    // Exercise pools by focus
-    const cardioExercises = exercises.filter(e => e.category === 'cardio');
-    const strengthExercises = exercises.filter(e => e.category === 'strength');
-    const lowerBody = ['kb-swing', 'kb-goblet-squat', 'kb-deadlift', 'kb-front-squat', 'kb-pistol-squat', 'kb-sumo-high-pull', 'kb-thrusters'];
-    const upperBody = ['kb-clean-press', 'kb-snatch', 'kb-floor-press', 'kb-renegade-row', 'kb-z-press', 'kb-gorilla-row', 'kb-chainsaw-row', 'kb-half-kneeling-press'];
-    const core = ['kb-halo', 'kb-windmill', 'kb-turkish-getup', 'kb-plank-pass-through', 'kb-reverse-crunch', 'kb-kneeling-clean-windmill'];
+    // Exercise pools by focus (exclude inactive)
+    const cardioExercises = exercises.filter(e => e.category === 'cardio' && e.active !== false);
+    const strengthExercises = exercises.filter(e => e.category === 'strength' && e.active !== false);
+    const lowerBody = ['kb-swing', 'kb-goblet-squat', 'kb-deadlift', 'kb-front-squat', 'kb-sumo-high-pull', 'kb-thrusters'];
+    const upperBody = ['kb-clean-press', 'kb-snatch', 'kb-floor-press', 'kb-z-press', 'kb-gorilla-row', 'kb-chainsaw-row', 'kb-half-kneeling-press'];
+    const core = ['kb-halo', 'kb-windmill', 'kb-plank-pass-through', 'kb-reverse-crunch', 'kb-kneeling-clean-windmill'];
     
     let pool: Exercise[] = [];
     
